@@ -3,15 +3,25 @@ import math
 import matplotlib.pyplot as plt
 import libs.libraries
 from enum import Enum
+import sys
 
-data_location = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale'
-# contains house 1-5 + metadata folder.
-house1_channel_2 = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale/house_1/channel_2.dat'
-house1_channel_5 = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale/house_1/channel_5.dat'
-house1_channel_4 = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale/house_1/channel_4.dat'
-house1_channel_6 = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale/house_1/channel_6.dat'
-house1_channel_7 = 'D:/unidata/data.ukedc.rl.ac.uk/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/UK-DALE-FULL-disaggregated/ukdale/house_1/channel_7.dat'
-#Read disaggregated data
+#TODO better data access solution
+#TODO refactoring of tools and helper functions into library package
+#TODO create wattage dataframe for house one
+#TODO create on-off dataframe for house one
+
+#TODO data-analysis with tools (mby)
+#TODO data mining libs
+#TODO data mining research
+
+#make variable string
+dataset = str(sys.argv[1])
+house_1 = dataset + "house_1"
+house_2 = dataset + "house_2"
+house_3 = dataset + "house_3"
+house_4 = dataset + "house_4"
+house_5 = dataset + "house_5"
+
 
 def seconds_to(unit : str, unix_seconds : int) -> int: 
     shrinkfactor_dict = {
