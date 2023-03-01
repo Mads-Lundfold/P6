@@ -6,11 +6,11 @@ from enum import Enum
 import sys
 import os
 import re as regex
+from mlxtend.frequent_patterns import apriori
+from typing import List
 
 #TODO better data access solution
 #TODO refactoring of tools and helper functions into library package
-#TODO create wattage dataframe for house one
-#TODO create on-off dataframe for house one
 
 #TODO data-analysis with tools (mby)
 #TODO data mining libs
@@ -58,7 +58,7 @@ def read_x_entries(x : int, channel_file : str) -> pd.DataFrame:
         for _ in range(x):
             line = next(data).split()
             time = int(line[0])
-            line[0] = convert_seconds_to(time, to='quarters') # Does 2 things at once! calculates and converts from string to int.
+            line[0] = convert_seconds_to(time, to='minutes') # Does 2 things at once! calculates and converts from string to int.
             line[1] = int(line[1])
             lines.append(line)
     
@@ -84,7 +84,8 @@ def get_data_from_house(house_number : str):
     for file in os.listdir(house_number):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
-            temp = read_entries_from(house_number + '/' + file)
+            #temp = read_entries_from(house_number + '/' + file)
+            temp = read_x_entries(10, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             result_frame.append(temp)
@@ -94,14 +95,17 @@ def get_data_from_house(house_number : str):
 
 
 def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
-    return watt_dataframe.where(watt_dataframe == 0, 1)
+    return watt_dataframe.where(watt_dataframe == False, True)
+    #return watt_dataframe.where(watt_dataframe == 0, 1)
 
 
 def main():
-    watt_house_data = get_data_from_house(house_number = house_3)
+    watt_house_data = get_data_from_house(house_number = house_1)
     binary_house_data = convert_watt_df_to_binary(watt_house_data)
-    print(watt_house_data)
     print(binary_house_data)
+    patterns = apriori(binary_house_data, min_support=0.6)
+    print(patterns)
+
 
 
 main()
