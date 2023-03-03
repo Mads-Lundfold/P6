@@ -85,7 +85,7 @@ def get_data_from_house(house_number : str):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
             #temp = read_entries_from(house_number + '/' + file)
-            temp = read_x_entries(10, house_number + '/' + file)
+            temp = read_x_entries(5000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             result_frame.append(temp)
@@ -95,13 +95,14 @@ def get_data_from_house(house_number : str):
 
 
 def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
-    return watt_dataframe.where(watt_dataframe == False, True)
-    #return watt_dataframe.where(watt_dataframe == 0, 1)
-
+    watt_dataframe.fillna(0, inplace=True)
+    binary_dataframe = watt_dataframe.astype(bool)
+    return binary_dataframe
 
 def main():
     watt_house_data = get_data_from_house(house_number = house_1)
     binary_house_data = convert_watt_df_to_binary(watt_house_data)
+    #print(watt_house_data)
     print(binary_house_data)
     patterns = apriori(binary_house_data, min_support=0.6)
     print(patterns)
@@ -109,12 +110,5 @@ def main():
 
 
 main()
-
-
-
-
-
-
-
 
 
