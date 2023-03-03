@@ -1,3 +1,4 @@
+import itertools
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
@@ -6,11 +7,11 @@ from enum import Enum
 import sys
 import os
 import re as regex
+from mlxtend.frequent_patterns import apriori
+from typing import List
 
 #TODO better data access solution
 #TODO refactoring of tools and helper functions into library package
-#TODO create wattage dataframe for house one
-#TODO create on-off dataframe for house one
 
 #TODO data-analysis with tools (mby)
 #TODO data mining libs
@@ -50,19 +51,18 @@ def plot_power_usage(dataframe : pd.DataFrame) -> None:
     plt.show()
 
 
-def read_x_entries(x : int, channel_file : str) -> pd.DataFrame:
+def read_entries_from_range(start: int, end : int, channel_file : str) -> pd.DataFrame:
     # TODO : Refactor this code
     lines = []
 
     with open(channel_file) as data:
-        for _ in range(x):
-            line = next(data).split()
-            time = int(line[0])
-            line[0] = convert_seconds_to(time, to='quarters') # Does 2 things at once! calculates and converts from string to int.
-            line[1] = int(line[1])
-            lines.append(line)
-    
-    return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
+        for line in itertools.islice(data, start, end):
+            split_string = line.split()
+            split_string[0] = convert_seconds_to(int(split_string[0]), 'quarters')
+            split_string[1] = int(split_string[1])
+            lines.append(split_string)
+        
+        return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
 def read_entries_from(channel_file : str):
@@ -70,10 +70,10 @@ def read_entries_from(channel_file : str):
 
     with open(channel_file) as file:
         for line in file:
-            split_list = line.split()
-            split_list[0] = convert_seconds_to(int(split_list[0]), 'quarters')
-            split_list[1] = int(split_list[1])
-            lines.append(split_list)
+            split_string = line.split()
+            split_string[0] = convert_seconds_to(int(split_string[0]), 'quarters')
+            split_string[1] = int(split_string[1])
+            lines.append(split_string)
     
     return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
@@ -84,7 +84,8 @@ def get_data_from_house(house_number : str):
     for file in os.listdir(house_number):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
-            temp = read_entries_from(house_number + '/' + file)
+            #temp = read_entries_from(house_number + '/' + file)
+            temp = read_entries_from_range(9000, 12000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             result_frame.append(temp)
@@ -94,23 +95,20 @@ def get_data_from_house(house_number : str):
 
 
 def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
-    return watt_dataframe.where(watt_dataframe == 0, 1)
-
+    watt_dataframe.fillna(0, inplace=True)
+    binary_dataframe = watt_dataframe.astype(bool)
+    return binary_dataframe
 
 def main():
-    watt_house_data = get_data_from_house(house_number = house_3)
+    watt_house_data = get_data_from_house(house_number = house_1)
     binary_house_data = convert_watt_df_to_binary(watt_house_data)
     print(watt_house_data)
-    print(binary_house_data)
+    #print(binary_house_data)
+    #patterns = apriori(binary_house_data, min_support=0.2)
+    #print(patterns)
+
 
 
 main()
-
-
-
-
-
-
-
 
 
