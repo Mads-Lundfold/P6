@@ -9,6 +9,7 @@ import os
 import re as regex
 from mlxtend.frequent_patterns import apriori
 from typing import List
+from pathlib import Path
 
 #TODO better data access solution
 #TODO refactoring of tools and helper functions into library package
@@ -37,9 +38,11 @@ def convert_seconds_to(time : int, to : str) -> int:
     }
     return math.floor(time / shrinkfactor_dict.get(to))
 
+
 def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None: 
-    # TODO
-    return
+    filepath = Path(f'dataframes/{filename}.csv')
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    dataframe.to_csv(filepath)
     
 
 def get_average_consumption(entries_in_seconds : pd.DataFrame) -> pd.DataFrame:
@@ -98,6 +101,7 @@ def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
     watt_dataframe.fillna(0, inplace=True)
     binary_dataframe = watt_dataframe.astype(bool)
     return binary_dataframe
+
 
 def main():
     watt_house_data = get_data_from_house(house_number = house_1)
