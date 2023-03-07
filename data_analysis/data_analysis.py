@@ -87,7 +87,7 @@ def get_data_from_house(house_number : str):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
             #temp = read_entries_from(house_number + '/' + file)
-            temp = read_entries_from_range(5000, 10000, house_number + '/' + file)
+            temp = read_entries_from_range(50000, 100000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             result_frame.append(temp)
@@ -104,7 +104,7 @@ def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
 
 def main():
     watt_house_data = get_data_from_house(house_number = house_2)
-    watt_dataframe = apply_power_thresholds(watt_house_data, house_2)
+    watt_dataframe = apply_power_thresholds(watt_house_data, house_2.split('/')[-1])
     binary_house_data = convert_watt_df_to_binary(watt_dataframe)
     print(watt_house_data)
     print(watt_dataframe)
