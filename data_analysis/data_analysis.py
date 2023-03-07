@@ -85,7 +85,7 @@ def get_data_from_house(house_number : str):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
             #temp = read_entries_from(house_number + '/' + file)
-            temp = read_entries_from_range(9000, 12000, house_number + '/' + file)
+            temp = read_entries_from_range(5000, 10000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             result_frame.append(temp)
@@ -93,18 +93,39 @@ def get_data_from_house(house_number : str):
     result_frame = pd.concat(result_frame, axis=1)
     return result_frame
 
+def apply_power_thresholds(watt_dataframe: pd.DataFrame):
+    house2_power_thresholds = {
+        'channel_8' : 2000,
+        'channel_12' : 20,
+        'channel_13' : 10,
+        'channel_14' : 50,
+        'channel_15' : 200
+    }
+
+    threshold_df = pd.DataFrame()
+    
+    for column in watt_dataframe:
+        threshold_df[column]=watt_dataframe[column].apply(lambda power: power if (power > house2_power_thresholds.get(column, 5)) else 0)
+    
+    return threshold_df
+    #watt_dataframe = watt_dataframe.applymap(lambda power: power if (power > house2_power_thresholds.get(column, 5)) else 0)
+
+
+def test(x, y):
+    return x if (x > y) else 0
 
 def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
     watt_dataframe.fillna(0, inplace=True)
+    watt_dataframe = apply_power_thresholds(watt_dataframe)
     binary_dataframe = watt_dataframe.astype(bool)
     return binary_dataframe
 
 def main():
-    watt_house_data = get_data_from_house(house_number = house_1)
+    watt_house_data = get_data_from_house(house_number = house_2)
     binary_house_data = convert_watt_df_to_binary(watt_house_data)
     print(watt_house_data)
-    #print(binary_house_data)
-    #patterns = apriori(binary_house_data, min_support=0.2)
+    print(binary_house_data)
+    #patterns = apriori(binary_house_data, min_support=0.6)
     #print(patterns)
 
 
