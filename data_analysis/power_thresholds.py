@@ -1,5 +1,10 @@
 import pandas as pd
 
+'''
+Dicts for power thresholds.
+The dicts should be read as the threshold of the channels in each given house.
+If a channel isn't specified, it has a threshold of 5.
+'''
 house1_power_thresholds = {
     'channel_5' : 20,
     'channel_6' : 10,
