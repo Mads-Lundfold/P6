@@ -34,7 +34,7 @@ def convert_seconds_to(time : int, to : str) -> int:
         "minutes": 60,
         "5-minutes": 300,
         "quarters": 900,
-        "half-hours": 1600,
+        "half-hours": 1800,
         "hours": 3600
     }
     return math.floor(time / shrinkfactor_dict.get(to))
