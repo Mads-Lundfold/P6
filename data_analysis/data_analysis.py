@@ -26,10 +26,13 @@ house_3 = dataset + "/house_3"
 house_4 = dataset + "/house_4"
 house_5 = dataset + "/house_5"
 
+
+
 # find filer med channel_(int) i regex
 
 def convert_seconds_to(time : int, to : str) -> int: 
     shrinkfactor_dict = {
+        "6-seconds": 1,
         "minutes": 60,
         "5-minutes": 300,
         "quarters": 900,
@@ -62,6 +65,20 @@ def read_entries_from_range(start: int, end : int, channel_file : str) -> pd.Dat
         for line in itertools.islice(data, start, end):
             split_string = line.split()
             split_string[0] = convert_seconds_to(int(split_string[0]), 'quarters')
+            split_string[1] = int(split_string[1])
+            lines.append(split_string)
+        
+        return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
+
+
+def channel_to_df_in_seconds(channel_file : str) -> pd.DataFrame:
+    # TODO : Refactor this code
+    lines = []
+
+    with open(channel_file) as data:
+        for line in itertools.islice(data):
+            split_string = line.split()
+            split_string[0] = int(split_string[0])
             split_string[1] = int(split_string[1])
             lines.append(split_string)
         
@@ -102,6 +119,40 @@ def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
     binary_dataframe = watt_dataframe.astype(bool)
     return binary_dataframe
 
+# IDÉ: LAV ET KOMPLET FRAME OG BARE JOIN!
+# Get difference in time values to: see how many rows to add AND: if their value will be 0 or previous
+def plug_channel_holes(df_channel: pd.DataFrame, house: str,channel: int)-> pd.DataFrame:
+    # BAD for index,row in df_channel.iterrows():
+    channelFile = f'{house}/channel_{channel}.dat'
+    num_lines = sum(1 for line in open(channelFile))-1 #-1 because last line in file is empty
+    # get duration of measurement
+    firstSecond = df_channel[0,0], lastSecond = df_channel[num_lines,0]
+    seconds_transpired = lastSecond - firstSecond
+
+    for row in df_channel: # det er ikke måden!
+        prev = int(df_channel[row, 0])
+        next = int(df_channel[row+1, 0])
+        difference = abs(prev-next)
+        if (difference > 6):
+            rows_to_add = difference/6
+            if (difference >= 60):
+                # add 0-rows
+            else: 
+                # add prev-rows
+
+
+    # make dummy dataframe
+    #df_dummy = pd.DataFrame(index=seconds_transpired/6, columns=df_channel.columns)
+    # merge frames on time
+    # 
+
+
+
+def clean_channel(house: str, channel: int)-> None:
+    channelFile = f'{house}/channel_{channel}.dat' # locate file
+    df_channel = channel_to_df_in_seconds(channelFile) # make dataframe
+    # fill missing
+    write_dataframe_to_csv(df_channel, f'{house}/channel_{channel}')# write csv
 
 def main():
     watt_house_data = get_data_from_house(house_number = house_1)
