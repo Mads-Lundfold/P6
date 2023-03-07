@@ -81,36 +81,31 @@ def read_entries_from(channel_file : str):
 
 
 def get_data_from_house(house_number : str):
-    result_frame = list()
+    watt_df = list()
 
     for file in os.listdir(house_number):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
-            #temp = read_entries_from(house_number + '/' + file)
-            temp = read_entries_from_range(50000, 100000, house_number + '/' + file)
+            temp = read_entries_from(house_number + '/' + file)
+            #temp = read_entries_from_range(50000, 100000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
-            result_frame.append(temp)
+            watt_df.append(temp)
     
-    result_frame = pd.concat(result_frame, axis=1)
-    return result_frame
+    watt_df = pd.concat(watt_df, axis=1)
+    
+    # Uses watt dataframe to create the on/off dataframe.
+    on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_2.split('/')[-1]).astype(bool)
 
-
-def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
-    watt_dataframe.fillna(0, inplace=True)
-    binary_dataframe = watt_dataframe.astype(bool)
-    return binary_dataframe
+    return watt_df, on_off_df
 
 
 def main():
-    watt_house_data = get_data_from_house(house_number = house_2)
-    watt_dataframe = apply_power_thresholds(watt_house_data, house_2.split('/')[-1])
-    binary_house_data = convert_watt_df_to_binary(watt_dataframe)
-    print(watt_house_data)
-    print(watt_dataframe)
-    print(binary_house_data)
-    #patterns = apriori(binary_house_data, min_support=0.6)
-    #print(patterns)
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    print(watt_df)
+    print(on_off_df)
+    patterns = apriori(on_off_df, min_support=0.1)
+    print(patterns)
 
 
 
