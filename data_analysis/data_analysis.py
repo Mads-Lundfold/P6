@@ -10,6 +10,8 @@ import re as regex
 from mlxtend.frequent_patterns import apriori
 from typing import List
 
+from power_thresholds import apply_power_thresholds
+
 #TODO better data access solution
 #TODO refactoring of tools and helper functions into library package
 
@@ -93,37 +95,19 @@ def get_data_from_house(house_number : str):
     result_frame = pd.concat(result_frame, axis=1)
     return result_frame
 
-def apply_power_thresholds(watt_dataframe: pd.DataFrame):
-    house2_power_thresholds = {
-        'channel_8' : 2000,
-        'channel_12' : 20,
-        'channel_13' : 10,
-        'channel_14' : 50,
-        'channel_15' : 200
-    }
-
-    threshold_df = pd.DataFrame()
-    
-    for column in watt_dataframe:
-        threshold_df[column]=watt_dataframe[column].apply(lambda power: power if (power > house2_power_thresholds.get(column, 5)) else 0)
-    
-    return threshold_df
-    #watt_dataframe = watt_dataframe.applymap(lambda power: power if (power > house2_power_thresholds.get(column, 5)) else 0)
-
-
-def test(x, y):
-    return x if (x > y) else 0
 
 def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
     watt_dataframe.fillna(0, inplace=True)
-    watt_dataframe = apply_power_thresholds(watt_dataframe)
     binary_dataframe = watt_dataframe.astype(bool)
     return binary_dataframe
 
+
 def main():
     watt_house_data = get_data_from_house(house_number = house_2)
-    binary_house_data = convert_watt_df_to_binary(watt_house_data)
+    watt_dataframe = apply_power_thresholds(watt_house_data, house_2)
+    binary_house_data = convert_watt_df_to_binary(watt_dataframe)
     print(watt_house_data)
+    print(watt_dataframe)
     print(binary_house_data)
     #patterns = apriori(binary_house_data, min_support=0.6)
     #print(patterns)
