@@ -45,6 +45,7 @@ def convert_seconds_to(time : int, to : str) -> int:
 def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None: 
     filepath = Path(f'dataframes/{filename}.csv')
     filepath.parent.mkdir(parents=True, exist_ok=True)
+    
     dataframe.to_csv(filepath)
     
 
@@ -76,7 +77,7 @@ def channel_to_df_in_seconds(channel_file : str) -> pd.DataFrame:
     lines = []
 
     with open(channel_file) as data:
-        for line in itertools.islice(data):
+        for line in itertools.islice(data, None):
             split_string = line.split()
             split_string[0] = int(split_string[0])
             split_string[1] = int(split_string[1])
@@ -122,13 +123,30 @@ def convert_watt_df_to_binary(watt_dataframe : pd.DataFrame):
 # IDÉ: LAV ET KOMPLET FRAME OG BARE JOIN!
 # Get difference in time values to: see how many rows to add AND: if their value will be 0 or previous
 def plug_channel_holes(df_channel: pd.DataFrame, house: str,channel: int)-> pd.DataFrame:
-    # BAD for index,row in df_channel.iterrows():
     channelFile = f'{house}/channel_{channel}.dat'
     num_lines = sum(1 for line in open(channelFile))-1 #-1 because last line in file is empty
     # get duration of measurement
-    firstSecond = df_channel[0,0], lastSecond = df_channel[num_lines,0]
-    seconds_transpired = lastSecond - firstSecond
+    #firstSecond = 0 #df_channel[0,0], lastSecond = df_channel[num_lines,0]
+    #seconds_transpired = lastSecond - firstSecond
 
+    count = 0
+    for row in range(0, num_lines): 
+        prev = int(df_channel._get_value(row, "Time"))
+        if prev:
+            next = int(df_channel._get_value(row+1, "Time"))
+            difference = abs(prev-next)
+            if (difference > 6):
+                rows_to_add = (difference/6)-1
+                if (difference >= 60):
+                    # add 0-watt-rows
+                    print("hi daddy! :D")
+
+                else: 
+                    # add prev-rows
+                    print("Hi mommy! :D")
+
+    return df_channel # IMPROMPTU, CHANGE!
+    '''
     for row in df_channel: # det er ikke måden!
         prev = int(df_channel[row, 0])
         next = int(df_channel[row+1, 0])
@@ -138,29 +156,33 @@ def plug_channel_holes(df_channel: pd.DataFrame, house: str,channel: int)-> pd.D
             if (difference >= 60):
                 # add 0-rows
             else: 
-                # add prev-rows
-
+                # add prev-rows'''
 
     # make dummy dataframe
     #df_dummy = pd.DataFrame(index=seconds_transpired/6, columns=df_channel.columns)
     # merge frames on time
     # 
 
+    #new new plan: fill dummy data frame of right size with necessary rows by iterating over the 
+    #channel frame
+
 
 
 def clean_channel(house: str, channel: int)-> None:
     channelFile = f'{house}/channel_{channel}.dat' # locate file
     df_channel = channel_to_df_in_seconds(channelFile) # make dataframe
-    # fill missing
-    write_dataframe_to_csv(df_channel, f'{house}/channel_{channel}')# write csv
+    df_plugged = plug_channel_holes(df_channel, house, 1)
+    write_dataframe_to_csv(df_plugged, "test_channel_cleaning")# write csv
 
 def main():
-    watt_house_data = get_data_from_house(house_number = house_1)
-    binary_house_data = convert_watt_df_to_binary(watt_house_data)
-    print(watt_house_data)
+    #watt_house_data = get_data_from_house(house_number = house_1)
+    #binary_house_data = convert_watt_df_to_binary(watt_house_data)
+    #print(watt_house_data)
     #print(binary_house_data)
     #patterns = apriori(binary_house_data, min_support=0.2)
     #print(patterns)
+    #channel_df = read_entries_from(f'{house_3}')
+    clean_channel(house_3, 1)
 
 
 
