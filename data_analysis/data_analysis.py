@@ -102,10 +102,10 @@ def get_data_from_house(house_number : str):
 
 def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_2)
-    print(watt_df)
-    print(on_off_df)
-    patterns = apriori(on_off_df, min_support=0.1)
-    print(patterns)
+    #print(watt_df)
+    #print(on_off_df)
+    #patterns = apriori(on_off_df, min_support=0.1)
+    #print(patterns)
 
 
 
