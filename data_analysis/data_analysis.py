@@ -122,17 +122,18 @@ def get_temporal_events(on_off_df: pd.DataFrame):
             if status_changes[time] == True:
                 events.append({
                     'start': time,
-                    'end': next(timestamps),
+                    'end': next(timestamps, time),
                     'channel': channel,
                     'date': datetime.datetime.utcfromtimestamp(time).strftime('%Y-%m-%d')
                 })
     
     # Sort events in chronological order
-    return sorted(events, key=lambda x: x['start'])
+    events = sorted(events, key=lambda x: x['start'])
+    return pd.DataFrame(events)
 
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3)
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)
     #print(on_off_df)
     print(get_temporal_events(on_off_df))
     #print(watt_df)
