@@ -7,6 +7,7 @@ from enum import Enum
 import sys
 import os
 import re as regex
+import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
 
@@ -37,7 +38,8 @@ def convert_seconds_to(time : int, to : str) -> int:
         "half-hours": 1800,
         "hours": 3600
     }
-    return math.floor(time / shrinkfactor_dict.get(to))
+    minimized_time = math.floor(time / shrinkfactor_dict.get(to))
+    return minimized_time * shrinkfactor_dict.get(to)
 
 def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None: 
     # TODO
@@ -121,20 +123,20 @@ def get_temporal_events(on_off_df: pd.DataFrame):
                 events.append({
                     'start': time,
                     'end': next(timestamps),
-                    'channel': channel
+                    'channel': channel,
+                    'date': datetime.datetime.utcfromtimestamp(time).strftime('%Y-%m-%d')
                 })
-                
-    return events
+    
+    # Sort events in chronological order
+    return sorted(events, key=lambda x: x['start'])
 
 
 def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_3)
     #print(on_off_df)
-    get_temporal_events(on_off_df)
+    print(get_temporal_events(on_off_df))
     #print(watt_df)
     #print(on_off_df)
-    #patterns = apriori(on_off_df, min_support=0.1)
-    #print(patterns)
 
 
 
