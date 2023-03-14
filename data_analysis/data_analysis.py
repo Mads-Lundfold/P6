@@ -64,7 +64,7 @@ def read_entries_from_range(start: int, end : int, channel_file : str) -> pd.Dat
             split_string[1] = int(split_string[1])
             lines.append(split_string)
         
-        return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
+    return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
 def read_entries_from(channel_file : str):
@@ -95,13 +95,42 @@ def get_data_from_house(house_number : str):
     watt_df = pd.concat(watt_df, axis=1)
     
     # Uses watt dataframe to create the on/off dataframe.
-    on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_2.split('/')[-1]).astype(bool)
+    on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
 
     return watt_df, on_off_df
 
 
+def get_temporal_events(on_off_df: pd.DataFrame):
+    
+    # Initialize list for events
+    events = list()
+
+    # Iterate through each channel of the dataframe
+    for channel in on_off_df.columns:
+
+        # Compare status at given time with the status of the next time
+        # If they are different, save the time where it changes
+        status_changes = on_off_df[channel].where(on_off_df[channel] != on_off_df[channel].shift(1)).dropna()
+
+        # Create an iterable out of the timestamps
+        timestamps = iter(status_changes.index.tolist())
+
+        # Create an event for each status change where the channel was turned on
+        for time in timestamps:
+            if status_changes[time] == True:
+                events.append({
+                    'start': time,
+                    'end': next(timestamps),
+                    'channel': channel
+                })
+                
+    return events
+
+
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    watt_df, on_off_df = get_data_from_house(house_number = house_3)
+    #print(on_off_df)
+    get_temporal_events(on_off_df)
     #print(watt_df)
     #print(on_off_df)
     #patterns = apriori(on_off_df, min_support=0.1)
