@@ -108,14 +108,14 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     # Iterate through each channel of the dataframe
     for channel in on_off_df.columns:
 
-        # Compare status at given time with the status of the next time
-        # If they are different, save the time where it changes
+        # Check if the channel gets turned on/off between following timestamps
+        # If it does, save the time where it changes
         status_changes = on_off_df[channel].where(on_off_df[channel] != on_off_df[channel].shift(1)).dropna()
 
         # Create an iterable out of the timestamps
         timestamps = iter(status_changes.index.tolist())
 
-        # Create an event for each status change where the channel was turned on
+        # Create an event for each change where the channel was turned on
         for time in timestamps:
             if status_changes[time] == True:
                 events.append({
