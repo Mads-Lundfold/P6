@@ -1,4 +1,5 @@
 import itertools
+from pathlib import Path
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
@@ -7,7 +8,7 @@ from enum import Enum
 import sys
 import os
 import re as regex
-import datetime
+from datetime import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
 
@@ -41,9 +42,12 @@ def convert_seconds_to(time : int, to : str) -> int:
     minimized_time = math.floor(time / shrinkfactor_dict.get(to))
     return minimized_time * shrinkfactor_dict.get(to)
 
+
 def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None: 
-    # TODO
-    return
+    filepath = Path(f'dataframes/{filename}.csv')
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    
+    dataframe.to_csv(filepath)
     
 
 def get_average_consumption(entries_in_seconds : pd.DataFrame) -> pd.DataFrame:
@@ -107,6 +111,10 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     # Initialize list for events
     events = list()
 
+    # Find first day from dataframe
+    day_zero = on_off_df.index[0]
+    day_zero = datetime.utcfromtimestamp(day_zero)
+
     # Iterate through each channel of the dataframe
     for channel in on_off_df.columns:
 
@@ -124,7 +132,7 @@ def get_temporal_events(on_off_df: pd.DataFrame):
                     'start': time,
                     'end': next(timestamps, time),
                     'channel': channel,
-                    'date': datetime.datetime.utcfromtimestamp(time).strftime('%Y-%m-%d')
+                    'day': (datetime.utcfromtimestamp(time) - day_zero).days
                 })
     
     # Sort events in chronological order
@@ -133,9 +141,11 @@ def get_temporal_events(on_off_df: pd.DataFrame):
 
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    watt_df, on_off_df = get_data_from_house(house_number = house_3)
     #print(on_off_df)
-    print(get_temporal_events(on_off_df))
+    events = get_temporal_events(on_off_df)
+    print(events)
+    #write_dataframe_to_csv(events, 'house_2_events')
     #print(watt_df)
     #print(on_off_df)
 
