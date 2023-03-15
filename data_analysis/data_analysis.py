@@ -47,7 +47,7 @@ def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None:
     filepath = Path(f'dataframes/{filename}.csv')
     filepath.parent.mkdir(parents=True, exist_ok=True)
     
-    dataframe.to_csv(filepath)
+    dataframe.to_csv(filepath, index=False, index_label=None, header=False)
     
 
 def get_average_consumption(entries_in_seconds : pd.DataFrame) -> pd.DataFrame:
@@ -141,14 +141,13 @@ def get_temporal_events(on_off_df: pd.DataFrame):
 
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3)
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)
     #print(on_off_df)
     events = get_temporal_events(on_off_df)
     print(events)
-    #write_dataframe_to_csv(events, 'house_2_events')
+    write_dataframe_to_csv(events, 'house_2_events')
     #print(watt_df)
     #print(on_off_df)
-
 
 
 main()
