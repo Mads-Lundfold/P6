@@ -1,4 +1,5 @@
 import itertools
+from pathlib import Path
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
@@ -7,6 +8,7 @@ from enum import Enum
 import sys
 import os
 import re as regex
+from datetime import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
 
@@ -37,11 +39,15 @@ def convert_seconds_to(time : int, to : str) -> int:
         "half-hours": 1800,
         "hours": 3600
     }
-    return math.floor(time / shrinkfactor_dict.get(to))
+    minimized_time = math.floor(time / shrinkfactor_dict.get(to))
+    return minimized_time * shrinkfactor_dict.get(to)
+
 
 def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None: 
-    # TODO
-    return
+    filepath = Path(f'dataframes/{filename}.csv')
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    
+    dataframe.to_csv(filepath)
     
 
 def get_average_consumption(entries_in_seconds : pd.DataFrame) -> pd.DataFrame:
@@ -64,7 +70,7 @@ def read_entries_from_range(start: int, end : int, channel_file : str) -> pd.Dat
             split_string[1] = int(split_string[1])
             lines.append(split_string)
         
-        return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
+    return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
 def read_entries_from(channel_file : str):
@@ -95,17 +101,53 @@ def get_data_from_house(house_number : str):
     watt_df = pd.concat(watt_df, axis=1)
     
     # Uses watt dataframe to create the on/off dataframe.
-    on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_2.split('/')[-1]).astype(bool)
+    on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
 
     return watt_df, on_off_df
 
 
+def get_temporal_events(on_off_df: pd.DataFrame):
+    
+    # Initialize list for events
+    events = list()
+
+    # Find first day from dataframe
+    day_zero = on_off_df.index[0]
+    day_zero = datetime.utcfromtimestamp(day_zero)
+
+    # Iterate through each channel of the dataframe
+    for channel in on_off_df.columns:
+
+        # Check if the channel gets turned on/off between following timestamps
+        # If it does, save the time where it changes
+        status_changes = on_off_df[channel].where(on_off_df[channel] != on_off_df[channel].shift(1)).dropna()
+
+        # Create an iterable out of the timestamps
+        timestamps = iter(status_changes.index.tolist())
+
+        # Create an event for each change where the channel was turned on
+        for time in timestamps:
+            if status_changes[time] == True:
+                events.append({
+                    'start': time,
+                    'end': next(timestamps, time),
+                    'channel': channel,
+                    'day': (datetime.utcfromtimestamp(time) - day_zero).days
+                })
+    
+    # Sort events in chronological order
+    events = sorted(events, key=lambda x: x['start'])
+    return pd.DataFrame(events)
+
+
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    watt_df, on_off_df = get_data_from_house(house_number = house_3)
+    #print(on_off_df)
+    events = get_temporal_events(on_off_df)
+    print(events)
+    #write_dataframe_to_csv(events, 'house_2_events')
     #print(watt_df)
     #print(on_off_df)
-    #patterns = apriori(on_off_df, min_support=0.1)
-    #print(patterns)
 
 
 
