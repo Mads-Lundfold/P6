@@ -126,10 +126,13 @@ def plug_channel_holes(df_channel: pd.DataFrame, house: str,channel: int)-> pd.D
     channelFile = f'{house}/channel_{channel}.dat'
     num_lines = sum(1 for line in open(channelFile))-1 #-1 because last line in file is empty
     # get duration of measurement
-    #firstSecond = 0 #df_channel[0,0], lastSecond = df_channel[num_lines,0]
-    #seconds_transpired = lastSecond - firstSecond
+    firstSecond = df_channel.at[0, "Time"]
+    lastSecond = df_channel.at[num_lines, "Time"]
+    #lastSecond = df_channel[num_lines,0] # error
+    
+    seconds_transpired = lastSecond - firstSecond
+    #df_dummy = pd.DataFrame(index=seconds_transpired/6, columns=df_channel.columns)
 
-    count = 0
     for row in range(0, num_lines): 
         prev = int(df_channel._get_value(row, "Time"))
         if prev:
@@ -144,7 +147,11 @@ def plug_channel_holes(df_channel: pd.DataFrame, house: str,channel: int)-> pd.D
                 else: 
                     # add prev-rows
                     print("Hi mommy! :D")
-
+    print("firstsecond = ", firstSecond)
+    print("lastsecond = ", lastSecond)
+    print("seconds transpired = ", seconds_transpired)
+    print("measurements in file: ", num_lines)
+    print("required measurements in that timeframe:", seconds_transpired/6)
     return df_channel # IMPROMPTU, CHANGE!
     '''
     for row in df_channel: # det er ikke måden!
@@ -182,7 +189,7 @@ def main():
     #patterns = apriori(binary_house_data, min_support=0.2)
     #print(patterns)
     #channel_df = read_entries_from(f'{house_3}')
-    clean_channel(house_3, 1)
+    clean_channel(house_3, channel=1)
 
 
 
