@@ -156,6 +156,7 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     events = sorted(events, key=lambda x: x['start'])
     return pd.DataFrame(events)
 
+
 def create_label_dictionary(labels_path : str):
     # Read the labels.dat into a dictionary <channel #> : <appliance>
     labels_dict = {}
@@ -181,8 +182,6 @@ def event_duration_analysis(csv_path: str):
     
 
     
-        
-
 
 
 def main():
