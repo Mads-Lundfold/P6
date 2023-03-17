@@ -1,4 +1,5 @@
 import itertools
+import json
 from pathlib import Path
 import pandas as pd
 import math
@@ -86,20 +87,23 @@ def read_entries_from(channel_file : str):
     return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
-def get_data_from_house(house_number : str):
+def get_data_from_house(house_number : str, labels_path : str):
     watt_df = list()
 
     for file in os.listdir(house_number):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
             temp = read_entries_from(house_number + '/' + file)
-            #temp = read_entries_from_range(50000, 100000, house_number + '/' + file)
+            #temp = read_entries_from_range(100000, 300000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
             watt_df.append(temp)
     
     watt_df = pd.concat(watt_df, axis=1)
     
+    label_dictionary = create_label_dictionary(labels_path)
+    watt_df = watt_df.rename(columns=label_dictionary)
+
     # Uses watt dataframe to create the on/off dataframe.
     on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
 
@@ -139,16 +143,22 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     events = sorted(events, key=lambda x: x['start'])
     return pd.DataFrame(events)
 
+def create_label_dictionary(labels_path : str):
+    # Read the labels.dat into a dictionary <channel #> : <appliance>
+    labels_dict = {}
+    with open(labels_path, 'r') as f:
+        for line in f:
+            line = line.strip().split()
+            labels_dict[f"channel_{line[0]}"] = line[1]
+    return labels_dict
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)
-    #print(on_off_df)
+    watt_df, on_off_df = get_data_from_house(house_number = house_3, labels_path= 'C:/Users/VikZu/Documents/ukdale/house_3/labels.dat')   
+    #watt_df.to_html('temp.html')
+    
     events = get_temporal_events(on_off_df)
-    print(events)
-    write_dataframe_to_csv(events, 'house_2_events')
-    #print(watt_df)
-    #print(on_off_df)
-
+    write_dataframe_to_csv(events, 'house_3_events')
+    
 
 main()
 
