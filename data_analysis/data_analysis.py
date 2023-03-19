@@ -33,12 +33,14 @@ house_5 = dataset + "/house_5"
 
 def convert_seconds_to(time : int, to : str) -> int: 
     shrinkfactor_dict = {
+        "no conversion": None,
         "minutes": 60,
         "5-minutes": 300,
         "quarters": 900,
         "half-hours": 1800,
         "hours": 3600
     }
+    if (to == "no conversion"): return time
     minimized_time = math.floor(time / shrinkfactor_dict.get(to))
     return minimized_time * shrinkfactor_dict.get(to)
 
@@ -79,7 +81,7 @@ def read_entries_from(channel_file : str):
     with open(channel_file) as file:
         for line in file:
             split_string = line.split()
-            split_string[0] = convert_seconds_to(int(split_string[0]), 'quarters')
+            split_string[0] = convert_seconds_to(int(split_string[0]), 'no conversion')
             split_string[1] = int(split_string[1])
             lines.append(split_string)
     
@@ -139,13 +141,28 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     events = sorted(events, key=lambda x: x['start'])
     return pd.DataFrame(events)
 
+def get_measurement_intervals(channelfile: pd.DataFrame)-> list:
+    df_gaps = channelfile.diff()
+    return df_gaps
+
+#def write_list_to_file(list: list)-> None:
+#    with open('your_file.txt', 'w') as f:
+ #       for line in lines:
+ #           f.write(f"{line}\n")
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    #watt_df, on_off_df = get_data_from_house(house_number = house_2)
+    df_raw_watt = read_entries_from(channel_file=f"{house_3}/channel_1.dat")
+    df_only_time = df_raw_watt.drop(['channel_1'], axis='columns')
+    #df_only_time = df_only_time.astype(int)
+    df_intervals = get_measurement_intervals(df_only_time)
+    write_dataframe_to_csv(dataframe=df_raw_watt, filename='df_raw_watt')
+    write_dataframe_to_csv(dataframe=df_only_time, filename='df_only_time')
+    write_dataframe_to_csv(dataframe=df_intervals, filename='df_intervals')
     #print(on_off_df)
-    events = get_temporal_events(on_off_df)
-    print(events)
-    write_dataframe_to_csv(events, 'house_2_events')
+    #events = get_temporal_events(on_off_df)
+    #print(events)
+    #write_dataframe_to_csv(events, 'house_2_events')
     #print(watt_df)
     #print(on_off_df)
 
