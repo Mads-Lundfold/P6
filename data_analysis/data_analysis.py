@@ -3,8 +3,10 @@ from pathlib import Path
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
+import seaborn as sns
 import libs.libraries
 from enum import Enum
+import numpy as np
 import sys
 import os
 import re as regex
@@ -141,9 +143,12 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     events = sorted(events, key=lambda x: x['start'])
     return pd.DataFrame(events)
 
-def get_measurement_intervals(channelfile: pd.DataFrame)-> list:
+def get_measurement_intervals(channelfile: pd.DataFrame)-> pd.DataFrame:
     df_gaps = channelfile.diff()
-    return df_gaps
+    return df_gaps.fillna(0).astype(int)
+
+def draw_histogram_from_list(data: list)-> None:
+    return
 
 #def write_list_to_file(list: list)-> None:
 #    with open('your_file.txt', 'w') as f:
@@ -154,17 +159,25 @@ def main():
     #watt_df, on_off_df = get_data_from_house(house_number = house_2)
     df_raw_watt = read_entries_from(channel_file=f"{house_3}/channel_1.dat")
     df_only_time = df_raw_watt.drop(['channel_1'], axis='columns')
-    #df_only_time = df_only_time.astype(int)
+    df_only_time = df_only_time.fillna(0)
+    df_only_time = df_only_time["Time"].astype(int)
     df_intervals = get_measurement_intervals(df_only_time)
     write_dataframe_to_csv(dataframe=df_raw_watt, filename='df_raw_watt')
     write_dataframe_to_csv(dataframe=df_only_time, filename='df_only_time')
     write_dataframe_to_csv(dataframe=df_intervals, filename='df_intervals')
+    
+    plt.hist(df_intervals, df_intervals.nunique())
+    plt.show()
+    print(type(df_intervals))
+    print(type(df_raw_watt))
+    df_intervals.plot.hist()
     #print(on_off_df)
     #events = get_temporal_events(on_off_df)
     #print(events)
     #write_dataframe_to_csv(events, 'house_2_events')
     #print(watt_df)
     #print(on_off_df)
+
 
 
 main()
