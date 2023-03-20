@@ -13,6 +13,7 @@ import re as regex
 from datetime import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
+from collections import Counter
 
 from power_thresholds import apply_power_thresholds
 
@@ -155,6 +156,45 @@ def draw_histogram_from_list(data: list)-> None:
  #       for line in lines:
  #           f.write(f"{line}\n")
 
+def plot_unique_values_histogram(series: pd.Series)-> None:
+    plt.close('all')
+    #Right now it puts all the values together in one bar.
+    #We want one bar per value
+    list_of_uniques = series.tolist()
+    print(list_of_uniques)
+    np_list_of_uniques = np.array(list_of_uniques)
+    #print(len(list_of_uniques))
+    bins = np.unique(np_list_of_uniques)
+    
+    sorted_list = sorted(list_of_uniques)
+    sorted_counted = Counter(sorted_list)
+
+    range_length = list(range(max(list_of_uniques))) # Get the largest value to get the range.
+    data_series = {}
+
+    for i in range_length:
+        data_series[i] = 0 # Initialize series so that we have a template and we just have to fill in the values.
+
+    for key, value in sorted_counted.items():
+        data_series[key] = value
+
+    data_series = pd.Series(data_series)
+    x_values = data_series.index
+    plt.bar(x_values, data_series.values)
+
+# you can customize the limits of the x-axis
+# plt.xlim(0, max(some_list))
+
+
+    
+    #x = np.random.normal(size=1000)
+    #x = np.array(list_of_uniques)
+    #plt.hist(x, density=False, bins=10)  # density=False would make counts
+    #plt.ylabel('Probability')
+    #plt.xlabel('Data')
+    plt.show()
+    return
+
 def main():
     #watt_df, on_off_df = get_data_from_house(house_number = house_2)
     df_raw_watt = read_entries_from(channel_file=f"{house_3}/channel_1.dat")
@@ -166,17 +206,13 @@ def main():
     write_dataframe_to_csv(dataframe=df_only_time, filename='df_only_time')
     write_dataframe_to_csv(dataframe=df_intervals, filename='df_intervals')
     
-    plt.hist(df_intervals, df_intervals.nunique())
-    plt.show()
-    print(type(df_intervals))
-    print(type(df_raw_watt))
-    df_intervals.plot.hist()
-    #print(on_off_df)
-    #events = get_temporal_events(on_off_df)
-    #print(events)
-    #write_dataframe_to_csv(events, 'house_2_events')
-    #print(watt_df)
-    #print(on_off_df)
+    df_intervals.plot(kind='hist')
+
+    print(df_intervals.nunique())
+
+    plot_unique_values_histogram(df_intervals)
+    #print(type(df_intervals))
+    #print(type(df_raw_watt))
 
 
 
