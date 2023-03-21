@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 import libs.libraries
 from enum import Enum
 import numpy as np
@@ -151,11 +151,51 @@ def get_measurement_intervals(channelfile: pd.DataFrame)-> pd.DataFrame:
 def draw_histogram_from_list(data: list)-> None:
     return
 
-#def write_list_to_file(list: list)-> None:
-#    with open('your_file.txt', 'w') as f:
- #       for line in lines:
- #           f.write(f"{line}\n")
+def get_unique_elements_from_list(input_list: list)-> list:
+    unique_list = []
+    for x in input_list:
+        if x not in unique_list:
+            unique_list.append(x)
+    return unique_list
 
+
+def get_occurrence_of_element_in_list(input_list: list, element)-> int:
+    occurrence = 0
+    for x in input_list:
+        if x == element: occurrence+=1
+    return occurrence
+
+
+def get_occurrence_of_every_element_in_list(input_list):
+    unique_list = get_unique_elements_from_list(input_list)
+    occurrence_list = []
+    for x in unique_list:
+        occurrence_list.append(get_occurrence_of_element_in_list(unique_list, x))
+    return unique_list, occurrence_list
+
+
+def get_unique_elements_from_dataframe(input_frame: pd.DataFrame, column: str)-> np.ndarray:
+    unique_array = input_frame[f"{column}"].unique()
+    unique_array.sort()
+    return unique_array
+
+# Does not do what is supposed!
+def get_occurrence_of_elements_in_dataframe(input_frame: pd.DataFrame, column: str)-> pd.DataFrame:
+    return input_frame[f'{column}'].value_counts().to_frame()
+
+def get_occurrence_of_every_element_in_dataframe(input_frame: pd.DataFrame, column: str):
+    unique_array = get_unique_elements_from_dataframe(input_frame, "Time")
+    count_series = pd.Series(dtype=int)
+    for x in unique_array:
+        count_series.concat()
+    return
+
+def add_percentage_column(input_frame: pd.DataFrame)-> pd.DataFrame:
+    input_frame['Eng_percent'] = (input_frame['Time'] / 
+                      input_frame['Time'].sum()) * 100
+    return input_frame
+
+'''
 def plot_unique_values_histogram(series: pd.Series)-> None:
     plt.close('all')
     #Right now it puts all the values together in one bar.
@@ -182,37 +222,38 @@ def plot_unique_values_histogram(series: pd.Series)-> None:
     x_values = data_series.index
     plt.bar(x_values, data_series.values)
 
-# you can customize the limits of the x-axis
-# plt.xlim(0, max(some_list))
-
-
-    
-    #x = np.random.normal(size=1000)
-    #x = np.array(list_of_uniques)
-    #plt.hist(x, density=False, bins=10)  # density=False would make counts
-    #plt.ylabel('Probability')
-    #plt.xlabel('Data')
-    plt.show()
     return
+'''
 
 def main():
-    #watt_df, on_off_df = get_data_from_house(house_number = house_2)
-    df_raw_watt = read_entries_from(channel_file=f"{house_3}/channel_1.dat")
-    df_only_time = df_raw_watt.drop(['channel_1'], axis='columns')
+    print("Begin!")
+    df_raw_watt = read_entries_from(channel_file=f"{house_5}/channel_4.dat")
+    print("Step 2")
+    df_only_time = df_raw_watt.drop(['channel_4'], axis='columns')
+    print("Step 3")
     df_only_time = df_only_time.fillna(0)
-    df_only_time = df_only_time["Time"].astype(int)
+    print("Step 4")
+    df_only_time = df_only_time["Time"].astype(int) # Turns into series here!
+    print("Step 5")
+    df_only_time = df_only_time.to_frame()
+    print("Step 6")
     df_intervals = get_measurement_intervals(df_only_time)
-    write_dataframe_to_csv(dataframe=df_raw_watt, filename='df_raw_watt')
-    write_dataframe_to_csv(dataframe=df_only_time, filename='df_only_time')
-    write_dataframe_to_csv(dataframe=df_intervals, filename='df_intervals')
-    
-    df_intervals.plot(kind='hist')
+    print("Step 7")
+    #write_dataframe_to_csv(dataframe=df_raw_watt, filename='df_raw_watt')
+    #write_dataframe_to_csv(dataframe=df_only_time, filename='df_only_time')
+    #write_dataframe_to_csv(dataframe=df_intervals, filename='df_intervals')
 
-    print(df_intervals.nunique())
+    occurrence_frame = get_occurrence_of_elements_in_dataframe(df_intervals, "Time")
+    print("Step 8")
+    sorted_occ_frame = occurrence_frame.sort_values(occurrence_frame.columns[0], ascending=False)
+    print("Step 9")
+    print(sorted_occ_frame)
+    print("Step 10")
+    sorted_occ_frame_with_percentages = add_percentage_column(sorted_occ_frame)
+    print("Step 11")
+    sorted_occ_frame_with_percentages.to_csv(path_or_buf="./house_5_channel_4")
+    print("Done")
 
-    plot_unique_values_histogram(df_intervals)
-    #print(type(df_intervals))
-    #print(type(df_raw_watt))
 
 
 
