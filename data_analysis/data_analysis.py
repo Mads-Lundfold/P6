@@ -1,3 +1,5 @@
+import csv
+import collections
 import itertools
 import json
 from pathlib import Path
@@ -51,6 +53,14 @@ def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None:
     dataframe.to_csv(filepath, index=False, index_label=None, header=False)
     
 
+def csv_to_event_df(csv_path: str):
+    file = open(csv_path, "r")
+    events = list(csv.reader(file, delimiter=","))
+    events_df = pd.DataFrame(events, columns=['start', 'end', 'appliance', 'day'])
+
+    return events_df
+
+
 def get_average_consumption(entries_in_seconds : pd.DataFrame) -> pd.DataFrame:
     return entries_in_seconds.groupby('Time').mean()
 
@@ -87,7 +97,7 @@ def read_entries_from(channel_file : str):
     return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
-def get_data_from_house(house_number : str, labels_path : str):
+def get_data_from_house(house_number : str):
     watt_df = list()
 
     for file in os.listdir(house_number):
@@ -100,12 +110,14 @@ def get_data_from_house(house_number : str, labels_path : str):
             watt_df.append(temp)
     
     watt_df = pd.concat(watt_df, axis=1)
-    
-    label_dictionary = create_label_dictionary(labels_path)
-    watt_df = watt_df.rename(columns=label_dictionary)
 
     # Uses watt dataframe to create the on/off dataframe.
     on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
+
+    label_dictionary = create_label_dictionary(house_number + '/labels.dat')
+    
+    watt_df = watt_df.rename(columns=label_dictionary)
+    on_off_df = on_off_df.rename(columns=label_dictionary)
 
     return watt_df, on_off_df
 
@@ -118,6 +130,9 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     # Find first day from dataframe
     day_zero = on_off_df.index[0]
     day_zero = datetime.utcfromtimestamp(day_zero)
+
+    # Find the last timestamp in the dataframe
+    end_time = on_off_df.index[-1]
 
     # Iterate through each channel of the dataframe
     for channel in on_off_df.columns:
@@ -134,7 +149,7 @@ def get_temporal_events(on_off_df: pd.DataFrame):
             if status_changes[time] == True:
                 events.append({
                     'start': time,
-                    'end': next(timestamps, time),
+                    'end': next(timestamps, end_time),
                     'channel': channel,
                     'day': (datetime.utcfromtimestamp(time) - day_zero).days
                 })
@@ -142,6 +157,7 @@ def get_temporal_events(on_off_df: pd.DataFrame):
     # Sort events in chronological order
     events = sorted(events, key=lambda x: x['start'])
     return pd.DataFrame(events)
+
 
 def create_label_dictionary(labels_path : str):
     # Read the labels.dat into a dictionary <channel #> : <appliance>
@@ -152,14 +168,33 @@ def create_label_dictionary(labels_path : str):
             labels_dict[f"channel_{line[0]}"] = line[1]
     return labels_dict
 
+
+def event_duration_analysis(csv_path: str):
+    
+    # Load events from csv file
+    events_df = csv_to_event_df(csv_path)
+
+    # Calculate the duration of each event, and make a list for each appliance of its events' durations.
+    events_df['duration'] = (events_df['end'].astype('int') - events_df['start'].astype('int'))
+    events_df.drop(columns=['start', 'end', 'day'], inplace=True)
+    
+    durations = events_df.groupby('appliance')['duration'].apply(list)
+
+    print(durations)
+    
+
+    
+
+
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3, labels_path= 'C:/Users/VikZu/Documents/ukdale/house_3/labels.dat')   
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)   
     #watt_df.to_html('temp.html')
     
     events = get_temporal_events(on_off_df)
-    write_dataframe_to_csv(events, 'house_3_events')
+    write_dataframe_to_csv(events, 'house_2_events')
     
 
 main()
+
 
 
