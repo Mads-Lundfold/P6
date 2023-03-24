@@ -16,4 +16,4 @@ confidence_threshold: the minimum confidence threshold
 level: the maximum level to mine
 
 Example: python3 main.py -i Data/ISID.csv -o output -ms 0.1 -mc 0.1 -mps 3
-[comment]: <> (py C:\Users\VikZu\repos\P6\data_analysis\TPM\TPM\main.py -i C:\Users\VikZu\repos\P6\data_analysis\dataframes\house_2_events.csv -o C:\Users\VikZu\repos\P6\data_analysis\TPM\TPM\output -ms 0.15 -mc 0.5 -mps)
+[comment]: <> (py C:\Users\VikZu\repos\P6\data_analysis\TPM\TPM\main.py -i C:\Users\VikZu\repos\P6\data_analysis\dataframes\house_2_events.csv -o C:\Users\VikZu\repos\P6\data_analysis\TPM\TPM\output -ms 0.15 -mc 0.5 -mps 2)

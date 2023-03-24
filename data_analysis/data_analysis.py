@@ -187,12 +187,24 @@ def event_duration_analysis(csv_path: str):
 
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_2)   
+    #watt_df, on_off_df = get_data_from_house(house_number = house_2)   
     #watt_df.to_html('temp.html')
     
-    events = get_temporal_events(on_off_df)
-    write_dataframe_to_csv(events, 'house_2_events')
+    #events = get_temporal_events(on_off_df)
+    #write_dataframe_to_csv(events, 'house_2_events')
+
+    # Print CSV
+    '''events_house2_df = pd.read_csv('C:/Users/VikZu/repos/P6/data_analysis/dataframes/house_1_events.csv')
+    events_house2_df.to_html('temp.html')'''
+
+    # Print JSON
+    '''with open('C:/Users/VikZu/repos/P6/data_analysis/TPM/TPM/output/Experiment_minsup0.6_minconf_0.6/level2.json') as f:
+        data = json.load(f)
     
+    TPM_df = pd.DataFrame(data)
+    TPM_df.to_html('temp.html')'''
+
+
 
 main()
 
