@@ -97,7 +97,7 @@ def read_entries_from(channel_file : str):
     return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
-def get_data_from_house(house_number : str, labels_path : str):
+def get_data_from_house(house_number : str):
     watt_df = list()
 
     for file in os.listdir(house_number):
@@ -110,12 +110,14 @@ def get_data_from_house(house_number : str, labels_path : str):
             watt_df.append(temp)
     
     watt_df = pd.concat(watt_df, axis=1)
-    
-    label_dictionary = create_label_dictionary(labels_path)
-    watt_df = watt_df.rename(columns=label_dictionary)
 
     # Uses watt dataframe to create the on/off dataframe.
     on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
+
+    label_dictionary = create_label_dictionary(house_number + '/labels.dat')
+    
+    watt_df = watt_df.rename(columns=label_dictionary)
+    on_off_df = on_off_df.rename(columns=label_dictionary)
 
     return watt_df, on_off_df
 
@@ -185,14 +187,14 @@ def event_duration_analysis(csv_path: str):
 
 
 def main():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3, labels_path= 'C:/Users/VikZu/Documents/ukdale/house_3/labels.dat')   
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)   
     #watt_df.to_html('temp.html')
     
     events = get_temporal_events(on_off_df)
-    write_dataframe_to_csv(events, 'house_3_events')
+    write_dataframe_to_csv(events, 'house_2_events')
     
 
-event_duration_analysis('dataframes\house_2_events.csv')
+main()
 
 
 
