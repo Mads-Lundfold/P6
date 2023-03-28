@@ -16,6 +16,7 @@ from mlxtend.frequent_patterns import apriori
 from typing import List
 
 from power_thresholds import apply_power_thresholds
+from appliance_removal import remove_appliances
 
 #TODO better data access solution
 #TODO refactoring of tools and helper functions into library package
@@ -187,9 +188,13 @@ def event_duration_analysis(csv_path: str):
 
 
 def main():
-    #watt_df, on_off_df = get_data_from_house(house_number = house_2)   
+    watt_df, on_off_df = get_data_from_house(house_number = house_2)   
     #watt_df.to_html('temp.html')
     
+    print(on_off_df)
+    on_off_df = remove_appliances(on_off_df)
+    print(on_off_df)
+
     #events = get_temporal_events(on_off_df)
     #write_dataframe_to_csv(events, 'house_2_events')
 
