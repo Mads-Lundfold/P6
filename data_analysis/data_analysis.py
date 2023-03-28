@@ -193,9 +193,9 @@ def main():
     
     # Remove appliances that are automatically on and therefore cannot be moved
     on_off_df = remove_appliances(on_off_df)
-
-    #events = get_temporal_events(on_off_df)
-    #write_dataframe_to_csv(events, 'house_1_events')
+    
+    events = get_temporal_events(on_off_df)
+    write_dataframe_to_csv(events, 'house_1_events')
 
     # Print CSV
     '''events_house2_df = pd.read_csv('C:/Users/VikZu/repos/P6/data_analysis/dataframes/house_1_events.csv')
