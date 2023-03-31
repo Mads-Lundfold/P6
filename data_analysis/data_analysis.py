@@ -37,6 +37,7 @@ house_5 = dataset + "/house_5"
 
 def convert_seconds_to(time : int, to : str) -> int: 
     shrinkfactor_dict = {
+        "none": 1,
         "minutes": 60,
         "5-minutes": 300,
         "quarters": 900,
@@ -85,13 +86,21 @@ def read_entries_from_range(start: int, end : int, channel_file : str) -> pd.Dat
     return pd.DataFrame(lines, columns=['Time', channel_file.split('/')[-1].rsplit('.', 1)[0]])
 
 
-def read_entries_from(channel_file : str):
+def read_entries_from_time_range(start_time: int, end_time : int, channel_file : str) -> pd.DataFrame:
+    df_all_entries = read_entries_from(channel_file, time_shrink_factor="none")
+    # drop entries outside of range
+    df_entries_in_range = df_all_entries[(df_all_entries['Time'] < start_time) and (df_all_entries['Time'] > end_time)]
+    
+    return df_entries_in_range
+
+
+def read_entries_from(channel_file : str, time_shrink_factor: str):
     lines = []
 
     with open(channel_file) as file:
         for line in file:
             split_string = line.split()
-            split_string[0] = convert_seconds_to(int(split_string[0]), 'quarters')
+            split_string[0] = convert_seconds_to(int(split_string[0]), time_shrink_factor)
             split_string[1] = int(split_string[1])
             lines.append(split_string)
     
@@ -104,7 +113,7 @@ def get_data_from_house(house_number : str):
     for file in os.listdir(house_number):
         if (regex.compile("channel_[0-9]+.dat").match(file)):
             # read file from data and return dataframe
-            temp = read_entries_from(house_number + '/' + file)
+            temp = read_entries_from(house_number + '/' + file, 'quarters')
             #temp = read_entries_from_range(100000, 300000, house_number + '/' + file)
             temp = get_average_consumption(temp)
             #join temp on res
