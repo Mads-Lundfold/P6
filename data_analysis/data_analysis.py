@@ -14,6 +14,9 @@ import re as regex
 from datetime import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
+import time
+
+
 
 from power_thresholds import apply_power_thresholds
 from appliance_removal import remove_appliances
@@ -216,10 +219,41 @@ def main():
     
     TPM_df = pd.DataFrame(data)
     TPM_df.to_html('temp.html')'''
+#================================================#
+#give quartered data
+watt_df, on_off_df = get_data_from_house(house_number = house_1)
 
+# make all data int
+on_off_df = on_off_df.apply(pd.to_numeric(downcast="signed"))
 
+# Trim away rows outside of desired time range
+on_off_df = on_off_df[on_off_df["Time"].between(1388530800, 1420066800)] # 2014, 2015 start
 
-main()
+# remove top dataframe entries until time is 00:00
+    # is this done already?
+
+# Create 0-initialized summation dataframe.
+sum_df = pd.DataFrame(0, columns=on_off_df.columns, index=96)
+print(sum_df)
+
+# Get new df for every day.
+# Add every new temp df to summation frame.
+start = 0
+end = 96
+for _ in range(on_off_df.len() / 96):
+    temp = on_off_df[start:end]
+    sum_df.add(temp) # add temp to sum
+    start = start + 96
+    end = end + 96
+
+write_dataframe_to_csv(sum_df, "sum_df")
+
+print("Done summing level 1 use and writing a frame!")
+
+# create 53 histograms
+# TODO
+
+#write_dataframe_to_csv(on_off_df, "on_off_df")
 
 
 
