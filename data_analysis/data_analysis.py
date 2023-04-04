@@ -184,7 +184,10 @@ def event_duration_analysis(csv_path: str):
     print(durations)
     
 
-    
+def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> pd.DataFrame:
+    df_events = csv_to_event_df(path_events)
+    df_events = df_events[(df_events['start'] >= unix_start) & (df_events['end'] <= unix_end)]
+    return df_events
 
 
 def main():
@@ -210,7 +213,9 @@ def main():
 
 
 
-main()
+#main()
+cut_event_frame = cut_data_in_time_range("./dataframes/house_1_events.csv", unix_start='1388530800', unix_end='1420066800')
+write_dataframe_to_csv(cut_event_frame, "house_1_2014")
 
 
 
