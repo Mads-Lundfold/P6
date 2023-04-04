@@ -226,20 +226,23 @@ watt_df, on_off_df = get_data_from_house(house_number = house_1)
 on_off_df = on_off_df.apply(pd.to_numeric, downcast="signed")
 
 # Trim away rows outside of desired time range
-on_off_df = on_off_df[on_off_df["Time"].between(1388530800, 1420066800)] # 2014, 2015 start
+start_of_2014 = 1388530800
+start_of_2015 = 1420066800
+on_off_df = on_off_df[start_of_2014:start_of_2015]
+#on_off_df = on_off_df[on_off_df["Time"].between(1388530800, 1420066800)] # 2014, 2015 start
 
 # remove top dataframe entries until time is 00:00
     # is this done already?
 
 # Create 0-initialized summation dataframe.
-sum_df = pd.DataFrame(0, columns=on_off_df.columns, index=96)
+sum_df = pd.DataFrame(0, columns=on_off_df.columns, index=range(96))
 print(sum_df)
 
 # Get new df for every day.
 # Add every new temp df to summation frame.
 start = 0
 end = 96
-for _ in range(on_off_df.len() / 96):
+for _ in range(len(on_off_df.index) / 96):
     temp = on_off_df[start:end]
     sum_df.add(temp) # add temp to sum
     start = start + 96
