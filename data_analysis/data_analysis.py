@@ -223,7 +223,7 @@ def main():
 watt_df, on_off_df = get_data_from_house(house_number = house_1)
 
 # make all data int
-on_off_df = on_off_df.apply(pd.to_numeric(downcast="signed"))
+on_off_df = on_off_df.apply(pd.to_numeric, downcast="signed")
 
 # Trim away rows outside of desired time range
 on_off_df = on_off_df[on_off_df["Time"].between(1388530800, 1420066800)] # 2014, 2015 start
