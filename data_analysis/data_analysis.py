@@ -14,7 +14,6 @@ import re as regex
 from datetime import datetime
 from mlxtend.frequent_patterns import apriori
 from typing import List
-import time
 
 
 
