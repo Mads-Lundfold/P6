@@ -186,7 +186,10 @@ def event_duration_analysis(csv_path: str):
 
 def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> pd.DataFrame:
     df_events = csv_to_event_df(path_events)
-    df_events = df_events[(df_events['start'] >= unix_start) & (df_events['end'] <= unix_end)]
+def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> pd.DataFrame:
+    df_events = csv_to_event_df(path_events)
+    df_events = df_events[(df_events['start'] >= unix_start) & (df_events['end'] <= unix_end) & (df_events['start'] <= df_events['end'])]
+    return df_events
     return df_events
 
 
