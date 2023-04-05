@@ -221,7 +221,6 @@ def main():
     
     TPM_df = pd.DataFrame(data)
     TPM_df.to_html('temp.html')'''
-<<<<<<< HEAD
 #================================================#
 #give quartered data
 watt_df, on_off_df = get_data_from_house(house_number = house_1)
@@ -260,14 +259,6 @@ print("Done summing level 1 use and writing a frame!")
 # TODO
 
 #write_dataframe_to_csv(on_off_df, "on_off_df")
-=======
-
-
-
-#main()
-cut_event_frame = cut_data_in_time_range("./dataframes/house_1_events.csv", unix_start='1388530800', unix_end='1420066800')
-write_dataframe_to_csv(cut_event_frame, "house_1_2014")
->>>>>>> main
 
 
 
