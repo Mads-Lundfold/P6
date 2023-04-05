@@ -208,6 +208,13 @@ def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> p
 def make_boolean_dataframe_binary(boolean_df: pd.DataFrame)-> None:
     return boolean_df.apply(pd.to_numeric, downcast="signed")
 
+
+def generate_binary_onoff_csv_for_house(house_number: str, filename: str) -> None:
+    watt_df, on_off_df = get_data_from_house(house_number = house_number)
+    binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
+    write_dataframe_to_csv(binary_on_off_df, filename=filename)
+
+
 def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_1)   
     #watt_df.to_html('temp.html')
