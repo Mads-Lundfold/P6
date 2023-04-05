@@ -205,7 +205,7 @@ def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> p
     df_events = df_events[(df_events['start'] >= unix_start) & (df_events['end'] <= unix_end) & (df_events['start'] <= df_events['end'])]
     return df_events
 
-def make_on_off_dataframe_binary(on_off_frame: pd.DataFrame)-> None:
+def make_boolean_dataframe_binary(on_off_frame: pd.DataFrame)-> None:
     return on_off_frame.apply(pd.to_numeric, downcast="signed")
 
 def main():
@@ -229,6 +229,11 @@ def main():
     TPM_df = pd.DataFrame(data)
     TPM_df.to_html('temp.html')'''
 #================================================#
+
+watt_df, on_off_df = get_data_from_house(house_number = house_1)
+
+
+'''
 #give quartered data
 watt_df, on_off_df = get_data_from_house(house_number = house_1)
 
@@ -266,6 +271,6 @@ print("Done summing level 1 use and writing a frame!")
 # TODO
 
 #write_dataframe_to_csv(on_off_df, "on_off_df")
-
+'''
 
 
