@@ -55,7 +55,12 @@ def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None:
     filepath.parent.mkdir(parents=True, exist_ok=True)
     
     dataframe.to_csv(filepath, index=False, index_label=None, header=False)
+
+def write_df_to_csv_with_header(dataframe : pd.DataFrame, filename : str, header=False)-> None:
+    filepath = Path(f'dataframes/{filename}.csv')
+    filepath.parent.mkdir(parents=True, exist_ok=True)
     
+    dataframe.to_csv(filepath, index=False, index_label=None, header=header)
 
 def csv_to_event_df(csv_path: str):
     file = open(csv_path, "r")
