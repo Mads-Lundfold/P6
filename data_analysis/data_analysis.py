@@ -206,7 +206,8 @@ def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> p
     return df_events
 
 def make_boolean_dataframe_binary(boolean_df: pd.DataFrame)-> None:
-    return boolean_df.apply(pd.to_numeric, downcast="signed")
+    return boolean_df.astype(int)
+    #return boolean_df.apply(pd.to_numeric, downcast="signed")
 
 def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_1)   
@@ -230,9 +231,16 @@ def main():
     TPM_df.to_html('temp.html')'''
 #================================================#
 
-watt_df, on_off_df = get_data_from_house(house_number = house_1)
-binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
-write_dataframe_to_csv(binary_on_off_df, 'binary_on_off_house1_alltime')
+#watt_df, on_off_df = get_data_from_house(house_number = house_1)
+#binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
+#write_dataframe_to_csv(binary_on_off_df, 'binary_on_off_house1_alltime')
+
+boolean_on_off_df = pd.read_csv('./dataframes/binary_on_off_house1_alltime.csv')
+print("loaded boolean dataframe!")
+binary_on_off_df = make_boolean_dataframe_binary(boolean_df=boolean_on_off_df)
+print("boolean dataframe converted to binary dataframe!")
+write_dataframe_to_csv(binary_on_off_df, "binary_on_off_df_house1")
+print("binary dataframe written to csv")
 
 '''
 #give quartered data
