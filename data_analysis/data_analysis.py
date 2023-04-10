@@ -2,7 +2,9 @@ import csv
 import collections
 import itertools
 import json
+from msilib import sequence
 from pathlib import Path
+from types import NoneType
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
@@ -13,7 +15,7 @@ import os
 import re as regex
 from datetime import datetime
 from mlxtend.frequent_patterns import apriori
-from typing import List
+from typing import List, Sequence
 
 
 
@@ -56,11 +58,11 @@ def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None:
     
     dataframe.to_csv(filepath, index=False, index_label=None, header=False)
 
-def write_df_to_csv_with_header(dataframe : pd.DataFrame, filename : str, header=False)-> None:
+def write_df_to_csv_detail(dataframe:pd.DataFrame, filename: str, header: bool=False, index: bool=False, index_label: str|NoneType=None)-> None:
     filepath = Path(f'dataframes/{filename}.csv')
     filepath.parent.mkdir(parents=True, exist_ok=True)
     
-    dataframe.to_csv(filepath, index=False, index_label=None, header=header)
+    dataframe.to_csv(filepath, index=index, index_label=index_label, header=header) 
 
 def csv_to_event_df(csv_path: str):
     file = open(csv_path, "r")
