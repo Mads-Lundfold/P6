@@ -3,6 +3,7 @@ import collections
 import itertools
 import json
 from pathlib import Path
+from types import NoneType
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
@@ -13,8 +14,9 @@ import os
 import re as regex
 from datetime import datetime
 from mlxtend.frequent_patterns import apriori
-from typing import List
-
+from typing import List, Sequence
+from os.path import exists
+import numpy as np
 
 
 from power_thresholds import apply_power_thresholds
@@ -56,11 +58,11 @@ def write_dataframe_to_csv(dataframe : pd.DataFrame, filename : str) -> None:
     
     dataframe.to_csv(filepath, index=False, index_label=None, header=False)
 
-def write_df_to_csv_with_header(dataframe : pd.DataFrame, filename : str, header=False)-> None:
+def write_df_to_csv_detail(dataframe:pd.DataFrame, filename: str, header: bool=False, index: bool=False, index_label: str|NoneType=None)-> None:
     filepath = Path(f'dataframes/{filename}.csv')
     filepath.parent.mkdir(parents=True, exist_ok=True)
     
-    dataframe.to_csv(filepath, index=False, index_label=None, header=header)
+    dataframe.to_csv(filepath, index=index, index_label=index_label, header=header) 
 
 def csv_to_event_df(csv_path: str):
     file = open(csv_path, "r")
@@ -206,7 +208,8 @@ def cut_data_in_time_range(path_events: str, unix_start: str, unix_end: str)-> p
     return df_events
 
 def make_boolean_dataframe_binary(boolean_df: pd.DataFrame)-> None:
-    return boolean_df.apply(pd.to_numeric, downcast="signed")
+    return boolean_df.astype(int)
+    #return boolean_df.apply(pd.to_numeric, downcast="signed")
 
 
 def generate_binary_onoff_csv_for_house(house_number: str, filename: str) -> None:
@@ -237,9 +240,64 @@ def main():
     TPM_df.to_html('temp.html')'''
 #================================================#
 
-watt_df, on_off_df = get_data_from_house(house_number = house_1)
-binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
-write_dataframe_to_csv(binary_on_off_df, 'binary_on_off_house1_alltime')
+def mine_lvl_1_patterns(resultCSV_name: str, house: str) -> None:
+    if (not (exists(f'./dataframes/{resultCSV_name}.csv'))) : 
+        print("lvl 1 dataframe for house not found. Generating...")
+        watt_df, on_off_df = get_data_from_house(house_number = house)
+        print("got data from house")
+        write_dataframe_to_csv(watt_df, 'house1_watt')
+        print("wrote house1_watt")
+        write_dataframe_to_csv(watt_df, 'house1_on_off')
+        print("wrote house1_on_off")
+
+        binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
+        print("got binary on off df")
+
+        write_df_to_csv_detail(binary_on_off_df, resultCSV_name, index=True, index_label="Time", header=True)
+        print("wrote binary df to csv")
+    print("lvl 1 dataframe for house already found.")
+    binary_on_off_df = pd.read_csv(filepath_or_buffer=f'./dataframes/{resultCSV_name}.csv', index_col="Time")
+    start_of_2014 = 1388534400 
+    start_of_2015 = 1420070400 
+    binary_on_off_df= binary_on_off_df.drop(binary_on_off_df.index[np.where(binary_on_off_df.index < start_of_2014)])#[(binary_on_off_df.index >= start_of_2014) & (binary_on_off_df.index < start_of_2015)]
+    binary_on_off_df= binary_on_off_df.drop(binary_on_off_df.index[np.where(binary_on_off_df.index >= start_of_2015)])
+    print(binary_on_off_df)
+    # Create 0-initialized summation dataframe.
+    sum_df = pd.DataFrame(0, columns=binary_on_off_df.columns, index=range(96))
+    #print(sum_df)
+
+    # Get new df for every day.
+    # Add every new temp df to summation frame.
+    start = 0
+    end = 96
+    print(binary_on_off_df.index)
+    print("starting to write sum df")
+    print(len(binary_on_off_df.index) / 96)
+    for _ in range(len(binary_on_off_df.index) / 96):
+        temp = binary_on_off_df[start:end]
+        sum_df.add(temp) # add temp to sum
+        start = start + 96
+        end = end + 96
+
+    write_dataframe_to_csv(sum_df, "sum_df")
+
+
+
+mine_lvl_1_patterns('lvl1_patterns_house1_timeAndColumns', house_1)
+
+#watt_df, on_off_df = get_data_from_house(house_number = house_1)
+#print("got data from house")
+#binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
+#print("got binary on off df")
+#write_dataframe_to_csv(binary_on_off_df, 'binary_on_off_house1_alltime')
+#print("wrote binary df to csv")
+
+#boolean_on_off_df = pd.read_csv('./dataframes/binary_on_off_house1_alltime.csv')
+#print("loaded boolean dataframe!")
+#binary_on_off_df = make_boolean_dataframe_binary(boolean_df=boolean_on_off_df)
+#print("boolean dataframe converted to binary dataframe!")
+#write_dataframe_to_csv(binary_on_off_df, "binary_on_off_df_house1")
+#print("binary dataframe written to csv")
 
 '''
 #give quartered data
