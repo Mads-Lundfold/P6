@@ -240,103 +240,23 @@ def main():
     TPM_df.to_html('temp.html')'''
 #================================================#
 
-def mine_lvl_1_patterns(resultCSV_name: str, house: str) -> None:
-    if (not (exists(f'./dataframes/{resultCSV_name}.csv'))) : 
-        print("lvl 1 dataframe for house not found. Generating...")
-        watt_df, on_off_df = get_data_from_house(house_number = house)
-        print("got data from house")
-        write_dataframe_to_csv(watt_df, 'house1_watt')
-        print("wrote house1_watt")
-        write_dataframe_to_csv(watt_df, 'house1_on_off')
-        print("wrote house1_on_off")
+#start_of_2014 = 1388530800
+#start_of_2015 = 1420066800
+def append_missing_rows_to_df(in_df: pd.DataFrame, missing_rows: np.ndarray)-> pd.DataFrame:
+    for row_index in missing_rows:
+        new_row = np.ndarray(len(in_df.columns)).fill(0)
+        in_df.loc[row_index] = new_row
+    return in_df
 
-        binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
-        print("got binary on off df")
+def cut_dataframe_into_range(start: int, end: int, dataframe: pd.DataFrame, )-> pd.DataFrame:
+    dataframe= dataframe.drop(dataframe.index[np.where(dataframe.index < start)])
+    dataframe= dataframe.drop(dataframe.index[np.where(dataframe.index >= end)])
+    return dataframe
 
-        write_df_to_csv_detail(binary_on_off_df, resultCSV_name, index=True, index_label="Time", header=True)
-        print("wrote binary df to csv")
-    print("lvl 1 dataframe for house already found.")
-    binary_on_off_df = pd.read_csv(filepath_or_buffer=f'./dataframes/{resultCSV_name}.csv', index_col="Time")
-    start_of_2014 = 1388534400 
-    start_of_2015 = 1420070400 
-    binary_on_off_df= binary_on_off_df.drop(binary_on_off_df.index[np.where(binary_on_off_df.index < start_of_2014)])#[(binary_on_off_df.index >= start_of_2014) & (binary_on_off_df.index < start_of_2015)]
-    binary_on_off_df= binary_on_off_df.drop(binary_on_off_df.index[np.where(binary_on_off_df.index >= start_of_2015)])
-    print(binary_on_off_df)
-    # Create 0-initialized summation dataframe.
-    sum_df = pd.DataFrame(0, columns=binary_on_off_df.columns, index=range(96))
-    #print(sum_df)
+def df_pad_missing_rows(dataframe: pd.DataFrame, stepsize: int)-> pd.DataFrame:
+    missing_rows = np.setdiff1d(np.arange(dataframe.index.min(), dataframe.index.max() + 1, step=stepsize), dataframe.index).tolist()
+    df_padded = append_missing_rows_to_df(dataframe, missing_rows)
+    return df_padded
 
-    # Get new df for every day.
-    # Add every new temp df to summation frame.
-    start = 0
-    end = 96
-    print(binary_on_off_df.index)
-    print("starting to write sum df")
-    print(len(binary_on_off_df.index) / 96)
-    for _ in range(len(binary_on_off_df.index) / 96):
-        temp = binary_on_off_df[start:end]
-        sum_df.add(temp) # add temp to sum
-        start = start + 96
-        end = end + 96
-
-    write_dataframe_to_csv(sum_df, "sum_df")
-
-
-
-mine_lvl_1_patterns('lvl1_patterns_house1_timeAndColumns', house_1)
-
-#watt_df, on_off_df = get_data_from_house(house_number = house_1)
-#print("got data from house")
-#binary_on_off_df = make_boolean_dataframe_binary(boolean_df=on_off_df)
-#print("got binary on off df")
-#write_dataframe_to_csv(binary_on_off_df, 'binary_on_off_house1_alltime')
-#print("wrote binary df to csv")
-
-#boolean_on_off_df = pd.read_csv('./dataframes/binary_on_off_house1_alltime.csv')
-#print("loaded boolean dataframe!")
-#binary_on_off_df = make_boolean_dataframe_binary(boolean_df=boolean_on_off_df)
-#print("boolean dataframe converted to binary dataframe!")
-#write_dataframe_to_csv(binary_on_off_df, "binary_on_off_df_house1")
-#print("binary dataframe written to csv")
-
-'''
-#give quartered data
-watt_df, on_off_df = get_data_from_house(house_number = house_1)
-
-# make all data int
-on_off_df = on_off_df.apply(pd.to_numeric, downcast="signed")
-
-# Trim away rows outside of desired time range
-start_of_2014 = 1388530800
-start_of_2015 = 1420066800
-on_off_df = on_off_df[start_of_2014:start_of_2015]
-#on_off_df = on_off_df[on_off_df["Time"].between(1388530800, 1420066800)] # 2014, 2015 start
-
-# remove top dataframe entries until time is 00:00
-    # is this done already?
-
-# Create 0-initialized summation dataframe.
-sum_df = pd.DataFrame(0, columns=on_off_df.columns, index=range(96))
-print(sum_df)
-
-# Get new df for every day.
-# Add every new temp df to summation frame.
-start = 0
-end = 96
-for _ in range(len(on_off_df.index) / 96):
-    temp = on_off_df[start:end]
-    sum_df.add(temp) # add temp to sum
-    start = start + 96
-    end = end + 96
-
-write_dataframe_to_csv(sum_df, "sum_df")
-
-print("Done summing level 1 use and writing a frame!")
-
-# create 53 histograms
-# TODO
-
-#write_dataframe_to_csv(on_off_df, "on_off_df")
-'''
 
 
