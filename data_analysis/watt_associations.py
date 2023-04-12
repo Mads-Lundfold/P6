@@ -6,9 +6,9 @@ import datetime
 from data_analysis import get_data_from_house, plot_power_usage
 
 
-#TODO Improve paths to house data, so it doesn't have to be called from this file.
-#TODO Ensure that the on/off dataframes begin at midnight so frequencies aren't scewed.
-#TODO Add Niklas' helper functions to ensure correctness.
+#TODO Redo the thresholds
+#TODO Make paths more general in usage_duration()
+#TODO Make code beautiful
 
 
 dataset = str(sys.argv[1])
