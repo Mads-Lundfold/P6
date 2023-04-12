@@ -232,3 +232,6 @@ def event_profiles():
 
         profiles.append(appliance_df)
 
+    print(profiles)
+
+#event_profiles()

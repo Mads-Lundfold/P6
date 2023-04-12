@@ -6,8 +6,8 @@ from data_analysis import get_data_from_house
 
 
 #TODO Improve paths to house data, so it doesn't have to be called from this file.
-#TODO Ensure that the on/off dataframes begin at midnight so frequencies aren't scewed
-#TODO Add Niklas' helper functions to ensure correctness
+#TODO Ensure that the on/off dataframes begin at midnight so frequencies aren't scewed.
+#TODO Add Niklas' helper functions to ensure correctness.
 
 
 dataset = str(sys.argv[1])
@@ -42,7 +42,21 @@ def usage_frequencies(on_off_df: pd.DataFrame):
 def chunkify(df: pd.DataFrame, chunk_size: int):
 
     # Slice dataframe into daily dataframes
-    chunk_list = [df.loc[i : i+chunk_size] for i in range(df.index[0], df.index[-1], chunk_size)]
+    # chunk_list = [df.loc[i : i+chunk_size] for i in range(df.index[0], df.index[-1], chunk_size)]
+
+    chunk_list = list()
+    start = df.index[0]
+    chunk_indexes = list()
+
+    for index in df.index:
+        if index < (start + chunk_size):
+            chunk_indexes.append(index)
+        else:
+            chunk_list.append(df.loc[chunk_indexes])
+            start += chunk_size
+            chunk_indexes.clear()
+            chunk_indexes.append(index)
+
     
     # Change 'time' column for each chunk from the unix timestamp to the time of the given day.
     # The first time (00:00) should be 0, whereas the last time (23:45) should be 86400, as that's the amount of seconds from the start.
@@ -67,4 +81,5 @@ def plot_frequencies(df: pd.DataFrame):
 # Running it
 watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 frequencies = usage_frequencies(on_off_df=on_off_df)
-plot_frequencies(frequencies)
+print(frequencies)
+#plot_frequencies(frequencies)
