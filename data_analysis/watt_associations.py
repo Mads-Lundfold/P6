@@ -4,9 +4,8 @@ import sys
 import datetime
 
 from data_analysis import get_data_from_house, plot_power_usage
+from power_thresholds import house2_power_thresholds
 
-
-#TODO Redo the thresholds
 #TODO Make paths more general in usage_duration()
 #TODO Make code beautiful
 
@@ -68,13 +67,8 @@ def usage_duration():
 # Running it
 #usage_duration()
 
-tresholds = {
-'kettle' : 600
-}
-
-watt_df, on_off_df = get_data_from_house(house_number = house_3)
+watt_df, on_off_df = get_data_from_house(house_number = house_2)
 watt_df_removed = watt_df.drop(columns=['aggregate'])
-watt_usage_df = watt_usage(watt_df_removed, tresholds)
-#plot_power_usage(watt_usage_df)
+watt_usage_df = watt_usage(watt_df_removed, house2_power_thresholds)
+plot_power_usage(watt_usage_df)
 print(watt_usage_df)
-#plot_usage(watt_usage_df)
