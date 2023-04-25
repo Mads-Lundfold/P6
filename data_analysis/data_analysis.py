@@ -214,24 +214,3 @@ def main():
 
 
 #main()
-
-# UNFINISHED
-def event_profiles():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3)  
-    events = csv_to_event_df('./dataframes/house_3_events.csv')
-
-    profiles = list()
-
-    for index, event in events.iterrows():
-        start = event['start']
-        end = event['end']
-        appliance = event['appliance']
-
-        appliance_df = watt_df.loc[start : end]
-        appliance_df = appliance_df[appliance]
-
-        profiles.append(appliance_df)
-
-    print(profiles)
-
-#event_profiles()
