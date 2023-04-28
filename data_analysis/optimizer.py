@@ -1,8 +1,6 @@
-# !!!READ!!! - Entirely unfinished. Lots of thought has been put in, but currently only does the absolute simplest thing it can - it returns the lowest price in a world where everything is hourly and constant.
-# Much of the code is junk and has little effect, but the idea was to expand upon it. This should happen soon.
-
-# need to modify the algorithm such that each element in cost vector maps to a given time
-    # idea: time vector becomes a vector of 2-element tuples: (price, time)
+#TODO: implement restricted/allowed hours
+#TODO: implement lvl 2 event handling
+#TODO: abstract further algorithm details away in implementation detail functions. For instance, lvl 1 opt should probably run again in lvl 2, make function.
 
 from calendar import timegm
 import pandas as pd
@@ -19,44 +17,29 @@ def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time:
     cut_price_data = price_data[(price_data['unix_timestamp'] >= timegm(start_time.timetuple())) 
                                    & (price_data['unix_timestamp'] < timegm(end_time.timetuple()))]
 
-    # Calculate current costs
-    minutes_of_use = len(event.profile) * event.units_in_minutes
-        # create a price vector in granularity corresponding to units_in_minutes for the input event. Price vector is delimited by start_time and end_time.
-        # Get time delta
-    optimization_period = end_time - start_time
-        # Get number of units_in_minutes of time delta. - this gives us a length for a price vector from start to end time with units_in_minutes minute units.
-    length_of_price_vector = (int(optimization_period.total_seconds())/60)/event.units_in_minutes
-
-    #price_vector = cut_price_data["GB_GBN_price_day_ahead"].tolist()
-    #price_vector = list(map(float, price_vector))
+    # create a price vector in granularity corresponding to units_in_minutes for the input event. Price vector is delimited by start_time and end_time.
     cut_price_data = cut_price_data.astype({'unix_timestamp':'int'})
     cut_price_data = cut_price_data.astype({'GB_GBN_price_day_ahead':'float'})
-
-    # THIS OPERATION MAKES A SERIES!
-    cut_price_data['unix_timestamp'] = pd.to_datetime(cut_price_data['unix_timestamp'], unit='s') # makes datetime objects down to second-accuracy.
-
+    cut_price_data['unix_timestamp'] = pd.to_datetime(cut_price_data['unix_timestamp'], unit='s')
     price_vector = list(cut_price_data.itertuples(index=False, name = None)) # (datetime,price)
-    print(f"Tupled price vector: {price_vector}")
+    
     # Change granularity of price vector
     expansion_factor = calculate_expansion_factor(event.units_in_minutes)
     price_vector = expand_price_vector(price_vector, expansion_factor)
-    print(f"Tupled expanded datetimed price vector: {price_vector}")
 
     # Perform optimization
-        # we need to find a way to map our appliance to a point on the price vector. For now we just place it on the 18th hour.
-    previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=datetime(2015, 11, 20, 18, 0, 0)) #TODO timeslot_start is temp bad solution.
-    print(f"previous cost {previous_cost}")
-
-        # Now have current price. Need new price, savings, new time.
-        # we will now iterate the simplest way possible. it's all hourly. For now we will even ignore restricted hours.
+    previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=event.occured)
     lowest_cost = previous_cost
+
     for i in range(len(price_vector) - len(event.profile)):
-        new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=price_vector[i][1])
+        new_timeslot = price_vector[i][1]
+        new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=new_timeslot)
         if(new_cost < lowest_cost): 
             lowest_cost = new_cost
+            best_timeslot = new_timeslot
 
-    print(f"lowest cost: {lowest_cost}")
-    return lowest_cost # needs to return more information - at what time do you get the cost? how expensive was observed use? How much was saved?
+    money_saved = previous_cost-lowest_cost
+    return lowest_cost, previous_cost, money_saved, best_timeslot
 
 def calculate_expansion_factor(event_units_in_minutes):
     expansion_factor = int(HOUR_IN_MINUTES//event_units_in_minutes)
@@ -85,13 +68,11 @@ def expand_price_vector(price_vector: list, expansion_factor: int) -> list:
 
 def get_cost_of_single_timeslot(event_profile: list, price_vector: list, timeslot_start: datetime)-> float:
     cost_sum = 0
-
     #Find start element of interest
     for element in price_vector:
         if (element[1] == timeslot_start): 
             first_corresponding_element_index = price_vector.index(element)
             break
-
     #Sum operations
     i = 0
     for element in range(first_corresponding_element_index, first_corresponding_element_index+len(event_profile)): 
