@@ -41,15 +41,13 @@ def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time:
     expansion_factor = calculate_expansion_factor(event.units_in_minutes)
     price_vector = expand_price_vector(price_vector, expansion_factor)
     print(f"Tupled expanded datetimed price vector: {price_vector}")
-    exit()
-
-    print(f"lowest element in price vector: {min(price_vector)}")
-    print(f"lowest element in price vector times 4: {min(price_vector*4)}")
 
     # Perform optimization
         # we need to find a way to map our appliance to a point on the price vector. For now we just place it on the 18th hour.
-    previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=10) #TODO timeslot_start is temp bad solution.
+    previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=datetime(2015, 11, 20, 18, 0, 0)) #TODO timeslot_start is temp bad solution.
     print(f"previous cost {previous_cost}")
+    exit()
+
         # Now have current price. Need new price, savings, new time.
         # we will now iterate the simplest way possible. it's all hourly. For now we will even ignore restricted hours.
     lowest_cost = previous_cost
@@ -74,7 +72,7 @@ def calculate_expansion_factor(event_units_in_minutes):
     return expansion_factor
 
 
-def expand_price_vector(price_vector: list(), expansion_factor: int) -> list:
+def expand_price_vector(price_vector: list, expansion_factor: int) -> list:
     # create new list with each value repeating price_vector many times.
     # now also with an edited time, calculated by increasing successive elements time by expfac/60 many minutes
     expanded_price_vector = list()
@@ -88,13 +86,24 @@ def expand_price_vector(price_vector: list(), expansion_factor: int) -> list:
     return expanded_price_vector
         
 
-#TODO REFACTOR NOW THAT PRICE VECTOR IS TUPLES
-def get_cost_of_single_timeslot(event_profile: list(), price_vector: list(), timeslot_start: int)-> float:
+def get_cost_of_single_timeslot(event_profile: list, price_vector: list, timeslot_start: datetime)-> float:
     cost_sum = 0
+
+    #Find start element of interest
+    for element in price_vector:
+        if (element[1] == timeslot_start): 
+            first_corresponding_element_index = price_vector.index(element)
+            break
+
+    #Sum operations
     i = 0
-    for element in event_profile:
-        cost_sum = cost_sum + element*price_vector[timeslot_start + i]
-        i = i + 1
+    for element in range(first_corresponding_element_index, first_corresponding_element_index+len(event_profile)): 
+        cost_sum += event_profile[i] * price_vector[element][0]
+        i+=1
+
+    print(f"index: {first_corresponding_element_index}")
+    print(f"summed cost: {cost_sum}")
+
     return cost_sum
 
 
