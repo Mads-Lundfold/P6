@@ -46,15 +46,12 @@ def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time:
         # we need to find a way to map our appliance to a point on the price vector. For now we just place it on the 18th hour.
     previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=datetime(2015, 11, 20, 18, 0, 0)) #TODO timeslot_start is temp bad solution.
     print(f"previous cost {previous_cost}")
-    exit()
 
         # Now have current price. Need new price, savings, new time.
         # we will now iterate the simplest way possible. it's all hourly. For now we will even ignore restricted hours.
     lowest_cost = previous_cost
-
-#TODO REFACTOR NOW THAT PRICE VECTOR IS TUPLES
-    for i in range(len(price_vector)-len(event.profile)):
-        new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=i)
+    for i in range(len(price_vector) - len(event.profile)):
+        new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=price_vector[i][1])
         if(new_cost < lowest_cost): 
             lowest_cost = new_cost
 
