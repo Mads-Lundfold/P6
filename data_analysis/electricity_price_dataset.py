@@ -30,7 +30,6 @@ def read_extract_convert_price_dataset():
 
     return df
 
-
 def main():
     price_df = read_extract_convert_price_dataset()
     print(price_df)

@@ -110,15 +110,13 @@ def get_data_from_house(house_number : str):
             #join temp on res
             watt_df.append(temp)
     
-    watt_df = pd.concat(watt_df, axis=1)
+    label_dictionary = create_label_dictionary(house_number + '/labels.dat')
 
+    watt_df = pd.concat(watt_df, axis=1)
+    watt_df = watt_df.rename(columns=label_dictionary)
+    
     # Uses watt dataframe to create the on/off dataframe.
     on_off_df = apply_power_thresholds(watt_dataframe=watt_df, house_num=house_number.split('/')[-1]).astype(bool)
-
-    label_dictionary = create_label_dictionary(house_number + '/labels.dat')
-    
-    watt_df = watt_df.rename(columns=label_dictionary)
-    on_off_df = on_off_df.rename(columns=label_dictionary)
 
     return watt_df, on_off_df
 
