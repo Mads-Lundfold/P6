@@ -33,12 +33,8 @@ def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time:
     cut_price_data = cut_price_data.astype({'GB_GBN_price_day_ahead':'float'})
 
     # THIS OPERATION MAKES A SERIES!
-    #cut_price_data = pd.to_datetime(cut_price_data['unix_timestamp'], unit='s') # makes datetime objects down to second-accuracy.
+    cut_price_data['unix_timestamp'] = pd.to_datetime(cut_price_data['unix_timestamp'], unit='s') # makes datetime objects down to second-accuracy.
 
-    print(cut_price_data.head())
-    exit()
-
-    print(type(cut_price_data))
     price_vector = list(cut_price_data.itertuples(index=False, name = None)) # (datetime,price)
     print(f"Tupled price vector: {price_vector}")
     # Change granularity of price vector
@@ -77,21 +73,21 @@ def calculate_expansion_factor(event_units_in_minutes):
         exit(1)
     return expansion_factor
 
-#TODO REFACTOR NOW THAT PRICE VECTOR IS TUPLES
+
 def expand_price_vector(price_vector: list(), expansion_factor: int) -> list:
     # create new list with each value repeating price_vector many times.
     # now also with an edited time, calculated by increasing successive elements time by expfac/60 many minutes
     expanded_price_vector = list()
-
     for element in price_vector:
-        i = 0
+        i = 0        
         for _ in range(expansion_factor):
-            new_element = (element[1], element[0] + timedelta(minutes=int(HOUR_IN_MINUTES/expansion_factor))) # Time vector stuff happens here. Need to increment time with 60/expfactor minutes
-            expanded_price_vector.append(element)
-            i = i +1
+            new_element = (element[1], element[0] + timedelta(minutes=int(HOUR_IN_MINUTES/expansion_factor)) * i) # Time vector stuff happens here. Need to increment time with 60/expfactor minutes
+            expanded_price_vector.append(new_element)
+            i = i + 1
 
     return expanded_price_vector
         
+
 #TODO REFACTOR NOW THAT PRICE VECTOR IS TUPLES
 def get_cost_of_single_timeslot(event_profile: list(), price_vector: list(), timeslot_start: int)-> float:
     cost_sum = 0
