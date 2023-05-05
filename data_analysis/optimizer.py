@@ -99,8 +99,7 @@ thingy_session = FakeDiscreteLvl1Event(profile = [1, 1, 1, 1, 1],
                                restricted_hours = [(22, 8), (11, 12)],
                                occured=datetime(2015, 11, 20, 18, 0, 0))
 
-house3_watt_df, on_off_df = get_data_from_house(house_number=house_3)
-eventfac = EventFactory(house3_watt_df, 'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv')
+'''eventfac = EventFactory(house3_watt_df, './dataframes/house_3_events.csv')#'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv')
 house_3_events = eventfac.events
 #remove everything but projectors
 
@@ -124,8 +123,43 @@ df_price = read_extract_convert_price_dataset()
 
 events_within_start_end = filter(lambda event: datetime.fromtimestamp(event.occured) >= start_time and datetime.fromtimestamp(event.occured) <= end_time, list_of_laptop_events)
 events_within_start_end = list(events_within_start_end)
-print(len(events_within_start_end))
-exit()
+print(len(events_within_start_end)) # Vi ser der er 2 laptop events på den givne dag vi kigger på.
+'''
+
+def extract_level_1_events_of_house(number: int, house_watt_df: pd.DataFrame)-> list:
+    eventfac = EventFactory(house_watt_df, f'./dataframes/house_{number}_events.csv')
+    house_events = eventfac.events
+    return house_events
+
+# Returns list of events of certain appliance over given time.
+def extract_specific_appliance_level_1_events(appliance_name: str, list_of_events: list)-> list: # may need house data as a parameter such that it does not have to be generated every time this is run, better perf.
+    list_of_specific_appliance_events = []
+    for event in list_of_events: 
+        if (event.appliance) == appliance_name: list_of_specific_appliance_events.append(event)
+    return list_of_specific_appliance_events
+
+def extract_appliance_level_1_events_within_timeframe(list_of_events: list, start_time: datetime, end_time: datetime)-> list:
+    events_within_start_end = filter(lambda event: datetime.fromtimestamp(event.occured) >= start_time and datetime.fromtimestamp(event.occured) <= end_time, list_of_events)
+    events_within_start_end = list(events_within_start_end)
+    return events_within_start_end
+
+house3_watt_df, on_off_df = get_data_from_house(house_number=house_3)
+events = extract_level_1_events_of_house(3, house3_watt_df)
+events = extract_specific_appliance_level_1_events('laptop', events)
+start_time = datetime(2013, 3, 25, 0, 0, 0)
+end_time = datetime(2013, 3, 26, 0, 0, 0)
+events = extract_appliance_level_1_events_within_timeframe(events, start_time, end_time)
+print(len(events))
+
+
+
+'''
+Hvad gøres der ved at de to events ligger på samme dag? Skal måske tænkes over senere...
+- Den første skal nok sættes tættest.. aRGH. Svært. Der er nok et aspekt med min-tid og maks-tid.
+- Måske skal jeg først tænke på bare at placere dem indenfor den bedste time associated plads, og ignorere at de kan ligge oveni hinanden.
+- Som MINIMUM skal de i hvert fald ikke ligge oveni hinanden. Det er ALDRIG muligt, og det skal håndteres.
+'''
+
 
 '''
 start_time = datetime(2015, 11, 20, 0, 0, 0)
