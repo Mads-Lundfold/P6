@@ -1,4 +1,8 @@
 #TODO: implement restricted/allowed hours
+    # Need to incorporate logic to ignore restricted subvectors. (or only select allowed)
+    # Need to create event object with time associations
+        # imagining lists of delimiting tuples.
+
 #TODO: implement lvl 2 event handling
 #TODO: abstract further algorithm details away in implementation detail functions. For instance, lvl 1 opt should probably run again in lvl 2, make function.
 
@@ -6,8 +10,11 @@ from calendar import timegm
 import pandas as pd
 import time
 from datetime import datetime, timedelta
-from events import FakeDiscreteLvl1Event
+from events import FakeDiscreteLvl1Event, LevelOneEvent
+from event_factory import EventFactory, Event
 from electricity_price_dataset import read_extract_convert_price_dataset
+from data_analysis import get_data_from_house, house_1, house_2, house_3
+from datetime import datetime
 
 HOUR_IN_MINUTES = 60
 
@@ -92,7 +99,38 @@ thingy_session = FakeDiscreteLvl1Event(profile = [1, 1, 1, 1, 1],
                                restricted_hours = [(22, 8), (11, 12)],
                                occured=datetime(2015, 11, 20, 18, 0, 0))
 
+house3_watt_df, on_off_df = get_data_from_house(house_number=house_3)
+eventfac = EventFactory(house3_watt_df, 'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv')
+house_3_events = eventfac.events
+#remove everything but projectors
+
+#for event in house_3_events:
+ #   print(event.appliance)
+
+#print(f"events before: {len(house_3_events)}")
+list_of_laptop_events = []
+for event in house_3_events:
+    if (event.appliance) == "laptop": list_of_laptop_events.append(event)
+
+#for event in list_of_laptop_events:
+ #   print(datetime.fromtimestamp(event.occured))
+
+# we will optimize day 2013-03-25 11:30:00
+
+start_time = datetime(2013, 3, 25, 0, 0, 0)
+end_time = datetime(2013, 3, 26, 0, 0, 0)
+df_price = read_extract_convert_price_dataset()
+
+
+events_within_start_end = filter(lambda event: datetime.fromtimestamp(event.occured) >= start_time and datetime.fromtimestamp(event.occured) <= end_time, list_of_laptop_events)
+events_within_start_end = list(events_within_start_end)
+print(len(events_within_start_end))
+exit()
+
+'''
 start_time = datetime(2015, 11, 20, 0, 0, 0)
 end_time = datetime(2015, 11, 21, 0, 0, 0)
 df_price = read_extract_convert_price_dataset()
 optimize(thingy_session, df_price, start_time, end_time)
+'''
+print()

@@ -7,3 +7,13 @@ class FakeDiscreteLvl1Event:
         self.minfreq = minfreq
         self.restricted_hours = restricted_hours
         self.occured = occured
+
+class LevelOneEvent:
+    def __init__(self, name: str, profile, units_in_minutes: int, maxfreq, minfreq, restricted_hours, occured) -> None:
+        self.name = name
+        self.profile = profile
+        self.units_in_minutes = units_in_minutes
+        self.maxfreq = maxfreq
+        self.minfreq = minfreq
+        self.restricted_hours = restricted_hours
+        self.occured = occured
