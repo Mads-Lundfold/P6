@@ -6,6 +6,8 @@
 #TODO: implement lvl 2 event handling
 #TODO: abstract further algorithm details away in implementation detail functions. For instance, lvl 1 opt should probably run again in lvl 2, make function.
 
+#TODO CURRENT: Optimize an event for one day such that it fits the right spot that day.
+
 from calendar import timegm
 import pandas as pd
 import time
@@ -15,11 +17,20 @@ from event_factory import EventFactory, Event
 from electricity_price_dataset import read_extract_convert_price_dataset
 from data_analysis import get_data_from_house, house_1, house_2, house_3
 from datetime import datetime
+from time_associations import usage_frequencies, get_time_associations
 
 HOUR_IN_MINUTES = 60
 
+#TODO definere hvad algoritmen i det hele skal. Lige nu tager den bare en decideret event, men det er måske bare fint.
+    # Så kan man cycle gennem en liste af events, det er måske heller ikke så galt. MEN SÅ KAN MAN JO IKKE HOLDE STYR PÅ HVOR TING PLACERES! Det dur ikke.
+    # Hold styr på det med ekstern pris-vektor som har tredje element, available: bool, 
+        # Ok, men indtil videre så tager vi bare og lader events blive placeret oveni hinanden. Vi napper bare den ene laptop event og kalder det en dag.
 
-def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time: datetime, end_time: datetime):
+
+
+
+
+def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, start_time: datetime, end_time: datetime):
     # Cut power data to fit optimization period.
     cut_price_data = price_data[(price_data['unix_timestamp'] >= timegm(start_time.timetuple())) 
                                    & (price_data['unix_timestamp'] < timegm(end_time.timetuple()))]
@@ -34,14 +45,19 @@ def optimize(event: FakeDiscreteLvl1Event, price_data: pd.DataFrame, start_time:
     expansion_factor = calculate_expansion_factor(event.units_in_minutes)
     price_vector = expand_price_vector(price_vector, expansion_factor)
 
-    # Perform optimization
+    # Perform optimization (This only happens for a single event profile. That is ok, we now have to place it with the subroutines created.)
+    # TODO: Take into account event time associations. 
+    # TODO: NEED GET_TIME_ASSOCIATIONS().
+
+    # GET TIME ASSOCIATION FOR event.appliance. Exclude all dicts not of the same kind of appliance.
+
     previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=event.occured)
     lowest_cost = previous_cost
 
     for i in range(len(price_vector) - len(event.profile)):
         new_timeslot = price_vector[i][1]
         new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=new_timeslot)
-        if(new_cost < lowest_cost): 
+        if(new_cost < lowest_cost): #TODO logic in here for evaluating if the time placement is legal or not. Not sure how to perform this.
             lowest_cost = new_cost
             best_timeslot = new_timeslot
 
@@ -91,14 +107,6 @@ def get_cost_of_single_timeslot(event_profile: list, price_vector: list, timeslo
 
     return cost_sum
 
-
-thingy_session = FakeDiscreteLvl1Event(profile = [1, 1, 1, 1, 1],
-                               units_in_minutes = 15, 
-                               maxfreq = 1, 
-                               minfreq = 1, 
-                               restricted_hours = [(22, 8), (11, 12)],
-                               occured=datetime(2015, 11, 20, 18, 0, 0))
-
 '''eventfac = EventFactory(house3_watt_df, './dataframes/house_3_events.csv')#'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv')
 house_3_events = eventfac.events
 #remove everything but projectors
@@ -144,6 +152,9 @@ def extract_appliance_level_1_events_within_timeframe(list_of_events: list, star
     return events_within_start_end
 
 house3_watt_df, on_off_df = get_data_from_house(house_number=house_3)
+frequencies = usage_frequencies(on_off_df)
+all_time_associations = get_time_associations(frequencies, 'dataframes/house_{3}_events.csv', 30)
+
 events = extract_level_1_events_of_house(3, house3_watt_df)
 events = extract_specific_appliance_level_1_events('laptop', events)
 start_time = datetime(2013, 3, 25, 0, 0, 0)

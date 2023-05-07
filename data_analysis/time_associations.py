@@ -104,4 +104,3 @@ def get_time_associations(df: pd.DataFrame, events_csv: __file__, threshold: flo
 watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 frequencies = usage_frequencies(on_off_df)
 time_associations_start_finish, usable_time_intervals_all_appliances = get_time_associations(frequencies, 'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv', 30)
-
