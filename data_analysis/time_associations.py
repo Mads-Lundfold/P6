@@ -81,26 +81,28 @@ def get_time_associations(df: pd.DataFrame, events_csv: __file__, threshold: flo
         time_intervals_where_app_can_be_used[appliance] = intervals'''
     
     # Get time intervals (start, end) for which there is some non-zero value in df
-    time_intervals_where_app_can_be_used = {}
+    time_intervals_where_app_cannot_be_used = {}
     for appliance in df.columns:
         intervals = []
         start_time = None
         for time in df.index:
-            if df[appliance][time] >= threshold and start_time is None:
+            if df[appliance][time] <= threshold and start_time is None:
                 start_time = time
-            elif df[appliance][time] < threshold and start_time is not None:
+            elif df[appliance][time] > threshold and start_time is not None:
                 end_time = time
                 intervals.append((start_time, end_time))
                 start_time = None
         if start_time is not None:
             end_time = df.index[-1]
             intervals.append((start_time, end_time))
-        time_intervals_where_app_can_be_used[appliance] = intervals
+        time_intervals_where_app_cannot_be_used[appliance] = intervals
 
-    print(time_intervals_where_app_can_be_used)
-    return df, time_intervals_where_app_can_be_used
+    print(time_intervals_where_app_cannot_be_used)
+    return df, time_intervals_where_app_cannot_be_used
 
 # Running it
-watt_df, on_off_df = get_data_from_house(house_number = house_3) 
-frequencies = usage_frequencies(on_off_df)
-time_associations_start_finish, usable_time_intervals_all_appliances = get_time_associations(frequencies, 'C:/Users/joens/source/repos/P6/data_analysis/dataframes/house_3_events.csv', 30)
+def get_restricted_times():
+    watt_df, on_off_df = get_data_from_house(house_number = house_3) 
+    frequencies = usage_frequencies(on_off_df)
+    time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)
+    return unusable_time_intervals_all_appliances
