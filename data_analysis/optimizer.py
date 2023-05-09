@@ -1,12 +1,10 @@
-#TODO: implement restricted/allowed hours
-    # Need to incorporate logic to ignore restricted subvectors. (or only select allowed)
-    # Need to create event object with time associations
-        # imagining lists of delimiting tuples.
+#REFACTOR NOTES:
+    #Events should really store granularity and duration. Would make the rest of the code SO much easier to read and write. 
+    #Calculating the duration of events EVERY TIME it's needed somewhere is stupid.
+    #There should be a generalized function that just checks if an event is within time. I think it has been programmed 3 slightly different times now!
 
-#TODO: implement lvl 2 event handling
-#TODO: abstract further algorithm details away in implementation detail functions. For instance, lvl 1 opt should probably run again in lvl 2, make function.
-
-#TODO CURRENT: Optimize an event for one day such that it fits the right spot that day.
+#Later notes:
+#Not really todo for now, but we can try every event once for every appliance, iterating through the time vector at most Max(events of some appliance over that period)
 
 from calendar import timegm
 import pandas as pd
@@ -24,15 +22,6 @@ HOUR_IN_MINUTES = 60
 TIME = 1
 DATETIME = 0
 PRICE = 1
-
-#TODO definere hvad algoritmen i det hele skal. Lige nu tager den bare en decideret event, men det er måske bare fint.
-    # Så kan man cycle gennem en liste af events, det er måske heller ikke så galt. MEN SÅ KAN MAN JO IKKE HOLDE STYR PÅ HVOR TING PLACERES! Det dur ikke.
-    # Hold styr på det med ekstern pris-vektor som har tredje element, available: bool, 
-        # Ok, men indtil videre så tager vi bare og lader events blive placeret oveni hinanden. Vi napper bare den ene laptop event og kalder det en dag.
-
-
-#TODO the algorithm should take a single appliance and try every time slot(in TAs) (Done!)
-#TODO not really todo for now, but we can try every event once for every appliance, iterating through the time vector at most max (events of some appliance over that period)
 
 #TODO Handle that events of the same appliance should not overlap. (current)
     #Original idea is just a single event, but that can be emulated with a list containing a single event.
@@ -69,11 +58,21 @@ def optimize(events: list, time_associations: dict, price_data: pd.DataFrame, st
     # GET TIME ASSOCIATION FOR event.appliance. Exclude all dicts not of the same kind of appliance.
     # TODO: One event at a time, entire price vector at a time.
     for event in events:
-        result = perform_optimization(event, price_vector, new_tas, expansion_factor)
+        result = perform_optimization(event, price_vector, new_tas, expansion_factor, placement_history)
         update_placement_history(placement_history, result, minutes_per_unit=units_in_minutes)
     return placement_history
 
 # change alg to loop optimization part for each event, and collect results in a list. We can later iterate over this list to easily determine total savings.
+
+# Takes some event in its time, see if it is contained within all corresponding time pairs.
+def events_overlap(placement_history: dict, new_timeslot, event: Event, minutes_per_unit: int)-> bool:
+    result = False
+    end_timeslot = new_timeslot + minutes_per_unit*len(event.profile)
+    for time_interval_tuple in placement_history[event.appliance]:
+        if (new_timeslot >= time_interval_tuple[0] and end_timeslot <= time_interval_tuple[1]):
+            result = True
+            break
+    return result
 
 
 def update_placement_history(placement_history: dict, result: tuple, minutes_per_unit: int)-> None:
@@ -86,23 +85,24 @@ def update_placement_history(placement_history: dict, result: tuple, minutes_per
     # Get duration in 2 datetimes or whatever. Put them in a tuple and append to list.
     start_timestamp = result[3]
     end_timestamp = start_timestamp.minute + minutes_per_unit*len(result[5].profile)
-    placement_history[appliance_name].append(result)
+    appendage = (start_timestamp, end_timestamp)
+    placement_history[appliance_name].append(appendage)
 
 
-def perform_optimization(event: Event, price_vector: list, new_tas: dict, expansion_factor: int):
+def perform_optimization(event: Event, price_vector: list, new_tas: dict, expansion_factor: int, placement_history: dict):
     previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=event.occured)
     lowest_cost = previous_cost
 
     for i in range(len(price_vector) - len(event.profile)):
         new_timeslot = price_vector[i][TIME]
-        if(is_in_TAs(event, new_timeslot, new_tas, expansion_factor)):
+        if(is_in_TAs(event, new_timeslot, new_tas, expansion_factor) and not events_overlap(placement_history, new_timeslot, event, expansion_factor)):
             new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=new_timeslot)
             if(new_cost < lowest_cost):
                 lowest_cost = new_cost
                 best_timeslot = new_timeslot
 
     money_saved = previous_cost-lowest_cost
-    return lowest_cost, previous_cost, money_saved, best_timeslot, event.appliance, event
+    return lowest_cost, previous_cost, money_saved, best_timeslot, event.appliance, event #TODO: change this to a struct or something instead of tuple. This is hard to interact with.
 
 
 def extract_appliance_TAs(appliance: str, time_associations_all: dict)-> list: 
