@@ -67,10 +67,10 @@ def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, st
     lowest_cost = previous_cost
 
     for i in range(len(price_vector) - len(event.profile)):
-        new_timeslot = price_vector[i][1]
+        new_timeslot = price_vector[i][TIME]
         if(is_in_TAs(event, new_timeslot, new_tas, expansion_factor)):
             new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=new_timeslot)
-            if(new_cost < lowest_cost): #TODO logic in here for evaluating if the time placement is legal or not. Not sure how to perform this.
+            if(new_cost < lowest_cost):
                 lowest_cost = new_cost
                 best_timeslot = new_timeslot
 
@@ -79,20 +79,23 @@ def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, st
 
 
 def extract_appliance_TAs(appliance: str, time_associations_all: dict)-> list: 
+    print(f"time_associations_all: {time_associations_all}")
     return time_associations_all[appliance]
 
 
 def is_in_TAs(event: Event, new_timeslot, new_tas: dict, expansion_factor: int)->bool:
     result = False
     event_length = len(event.profile)
-    start_time = new_timeslot[TIME]
+    start_time = new_timeslot
     minutes_per_unit = expansion_factor
     # Remember: expansion factor is 60/units_in_minutes. 
-    end_time = start_time + event_length * datetime(minute=minutes_per_unit)
+    end_time = start_time + event_length * timedelta(minutes=minutes_per_unit)
 
     event_appliance_TAs = extract_appliance_TAs(appliance=event.appliance, time_associations_all=new_tas) # makes list of datetime tuples.
     for time_association in event_appliance_TAs:
-        if (start_time >= time_association[0] and end_time <= time_association[1]): 
+        print(type(start_time))
+        print(type(time_association[0]))
+        if (start_time.to_pydatetime().time() >= time_association[0] and end_time.to_pydatetime().time() <= time_association[1]): # what is left, what is right? left: <class 'pandas._libs.tslibs.timestamps.Timestamp'>. Right: <class 'datetime.time'>
             result = True
             break
 
@@ -190,14 +193,15 @@ def extract_appliance_level_1_events_within_timeframe(list_of_events: list, star
 
 house3_watt_df, on_off_df = get_data_from_house(house_number=house_3)
 frequencies = usage_frequencies(on_off_df)
-all_time_associations = get_time_associations(frequencies, f'dataframes/house_{3}_events.csv', 30)
+all_time_associations_df, all_time_associations  = get_time_associations(frequencies, f'dataframes/house_{3}_events.csv', 30)
 
 events = extract_level_1_events_of_house(3, house3_watt_df)
 events = extract_specific_appliance_level_1_events('laptop', events)
-start_time = datetime(2013, 3, 25, 0, 0, 0)
-end_time = datetime(2013, 3, 26, 0, 0, 0)
+start_time = datetime(2016, 3, 25, 0, 0, 0)
+end_time = datetime(2016, 3, 26, 0, 0, 0)
 events = extract_appliance_level_1_events_within_timeframe(events, start_time, end_time)
-res = optimize(event=events[0], time_associations=all_time_associations, price_data=read_extract_convert_price_dataset(), start_time=start_time, end_time=end_time, units_in_minutes=15)
+fake_laptop_event = Event(profile=[100, 100, 100, 100, 100], appliance='laptop', occured=datetime(2016, 3, 25, 12, 0, 0))
+res = optimize(event=fake_laptop_event, time_associations=all_time_associations, price_data=read_extract_convert_price_dataset(), start_time=start_time, end_time=end_time, units_in_minutes=15)
 print(res)
 
 
