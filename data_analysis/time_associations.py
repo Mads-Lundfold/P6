@@ -101,19 +101,31 @@ def get_time_associations(df: pd.DataFrame, events_csv: __file__, threshold: flo
     return df, time_intervals_where_app_cannot_be_used
 
 
-def restricted_times_as_quarters(restricted_time: dict):
-    for key in restricted_time:
-        print(key)
-        for interval in restricted_time[key]:
-            print(interval[0])
+def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
+    print(frequencies)
+    max_values = frequencies.max()
+    relative_usage = (frequencies / max_values) * 100
+    index = pd.Index(range(0,len(relative_usage),1))
+    relative_usage = relative_usage.set_index(index)
+    print(relative_usage)
 
+    restricted_times = {}
+    for appliance in relative_usage.columns:
+        times = []
+        for quarter in relative_usage.index:
+            if relative_usage[appliance][quarter] < threshold:
+                times.append(quarter)
+        restricted_times[appliance] = times
+    
+    print(restricted_times)
+    return restricted_times
 
 # Running it
 def get_restricted_times():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
     frequencies = usage_frequencies(on_off_df)
-    time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)
-    restricted_times_as_quarters(unusable_time_intervals_all_appliances)
-    return unusable_time_intervals_all_appliances
+    return get_quarter_associations(frequencies, 30)
+    #time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)
+    #return unusable_time_intervals_all_appliances
 
-get_restricted_times()
+#get_restricted_times()

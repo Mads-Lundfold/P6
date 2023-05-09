@@ -28,6 +28,7 @@ class Optimizer:
     def __init__(self, restricted_times):
         self.restricted_times = restricted_times
     
+    # Handle patterns somehow
     
     def optimize_day(self, events, price_vector):
         # List of the newly scheduled events
@@ -36,23 +37,25 @@ class Optimizer:
 
         for event in events:
             event_len = event.length
-            print(event_len)
-            print(price_vector[0:event_len])
-            lowest_cost = np.sum(event.profile * price_vector[0:event_len][1])
-            print('okay')
+            lowest_cost = np.sum(event.profile * price_vector[0:event_len])
             optimal_start = 0
-
+            print(event.appliance)
+            print(temp_restricted_times[event.appliance])
             for i in range(len(price_vector) - event_len):
-                new_cost = np.sum(event * price_vector[i:i+event_len][1])
-                if new_cost < lowest_cost:
-                    lowest_cost = new_cost
-                    optimal_start = i
-            
-            temp_restricted_times[event.appliance] += [i, i+event_len]
+                if i not in temp_restricted_times[event.appliance]:
+                    new_cost = np.sum(event.profile * price_vector[i:i+event_len])
+                    if new_cost < lowest_cost:
+                        lowest_cost = new_cost
+                        optimal_start = i
+           
+            # Update restricted times
+           
             new_schedule.append(Event(appliance=event.appliance, 
                                       profile=event.profile, 
                                       occured=optimal_start))
 
+        for event in new_schedule:
+            print(event.appliance, event.occured)
         return new_schedule
 
 
@@ -77,8 +80,8 @@ def main():
     house_3_restricted_times = get_restricted_times()
     #print(house_3_restricted_times)
     price_data_2015 = create_price_vector_dataset(1420066800, 1451602800)
-    #price_vector = np.array(np.repeat(price_data_2015['2015-01-02'],4))
-    price_vector = expand_price_vector(price_data_2015['2015-04-04'], 4)
+    price_vector = np.array(np.repeat(price_data_2015['2015-04-04'],4))
+    #price_vector = expand_price_vector(price_data_2015['2015-04-04'], 4)
     #print(price_vector)
 
     dataset = str(sys.argv[1])
@@ -95,6 +98,7 @@ def main():
 
     optimizer = Optimizer(house_3_restricted_times)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
+    print(price_vector)
 
 
     
