@@ -22,6 +22,8 @@ from time_associations import usage_frequencies, get_time_associations
 
 HOUR_IN_MINUTES = 60
 TIME = 1
+DATETIME = 0
+PRICE = 1
 
 #TODO definere hvad algoritmen i det hele skal. Lige nu tager den bare en decideret event, men det er måske bare fint.
     # Så kan man cycle gennem en liste af events, det er måske heller ikke så galt. MEN SÅ KAN MAN JO IKKE HOLDE STYR PÅ HVOR TING PLACERES! Det dur ikke.
@@ -29,10 +31,12 @@ TIME = 1
         # Ok, men indtil videre så tager vi bare og lader events blive placeret oveni hinanden. Vi napper bare den ene laptop event og kalder det en dag.
 
 
-#TODO the algorithm should take a single appliance and try every time slot(in TAs)
+#TODO the algorithm should take a single appliance and try every time slot(in TAs) (Done!)
 #TODO not really todo for now, but we can try every event once for every appliance, iterating through the time vector at most max (events of some appliance over that period)
 
-
+#TODO Handle that events of the same appliance should not overlap. (current)
+    #Original idea is just a single event, but that can be emulated with a list containing a single event.
+    # what if we have a data-structure containing each current placement. Then, if a same-appliance has been placed in the alg, we check to see if we overlap.
 
 
 def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, start_time: datetime, end_time: datetime, units_in_minutes: int):
@@ -56,6 +60,8 @@ def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, st
     price_vector = expand_price_vector(price_vector, expansion_factor)
     print(price_vector)
 
+    placement_history = dict()
+
     # Perform optimization (This only happens for a single event profile. That is ok, we now have to place it with the subroutines created.)
     # TODO: Take into account event time associations. 
     # TODO: NEED GET_TIME_ASSOCIATIONS().
@@ -63,6 +69,13 @@ def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, st
     # GET TIME ASSOCIATION FOR event.appliance. Exclude all dicts not of the same kind of appliance.
     # TODO: One event at a time, entire price vector at a time.
 
+    result = perform_optimization(event, price_vector, new_tas, expansion_factor)
+    return result
+
+# change alg to loop optimization part for each event, and collect results in a list. We can later iterate over this list to easily determine total savings.
+
+
+def perform_optimization(event: Event, price_vector: list, new_tas: dict, expansion_factor: int):
     previous_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=event.occured)
     lowest_cost = previous_cost
 
@@ -75,7 +88,7 @@ def optimize(event: Event, time_associations: dict, price_data: pd.DataFrame, st
                 best_timeslot = new_timeslot
 
     money_saved = previous_cost-lowest_cost
-    return lowest_cost, previous_cost, money_saved, best_timeslot
+    return lowest_cost, previous_cost, money_saved, best_timeslot, event.appliance
 
 
 def extract_appliance_TAs(appliance: str, time_associations_all: dict)-> list: 
@@ -93,8 +106,6 @@ def is_in_TAs(event: Event, new_timeslot, new_tas: dict, expansion_factor: int)-
 
     event_appliance_TAs = extract_appliance_TAs(appliance=event.appliance, time_associations_all=new_tas) # makes list of datetime tuples.
     for time_association in event_appliance_TAs:
-        print(type(start_time))
-        print(type(time_association[0]))
         if (start_time.to_pydatetime().time() >= time_association[0] and end_time.to_pydatetime().time() <= time_association[1]): # what is left, what is right? left: <class 'pandas._libs.tslibs.timestamps.Timestamp'>. Right: <class 'datetime.time'>
             result = True
             break
