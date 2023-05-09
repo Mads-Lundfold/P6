@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 import csv
+import datetime
 from data_analysis import get_data_from_house
 
 class EventFactory:
@@ -25,7 +26,7 @@ class EventFactory:
             # Create event object
             event = Event(appliance = appliance,
                           profile = self.get_profile(start, end, appliance),
-                          occured = start)
+                          occured = datetime.datetime.fromtimestamp(start))
                 
             events.append(event)
         
@@ -43,9 +44,18 @@ class EventFactory:
 
         return profile.tolist()
     
+    def select_events_on_day(self, month_day):
+        events_on_day = list()
+        for event in self.events:
+            if event.occured.strftime('%m-%d') == month_day:
+                events_on_day.append(event)
+        
+        return events_on_day
+        
 
     def print_events_info(self):
-        print(self.events[0].profile)
+        for event in self.events:
+            print(event.occured)
 
 
 # Dummy Event class for testing purposes
@@ -54,6 +64,7 @@ class Event:
         self.appliance = appliance
         self.profile = profile
         self.occured = occured
+        self.length = len(profile)
 
 
 def testspace():
@@ -69,4 +80,4 @@ def testspace():
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
     event_fac.print_events_info()
 
-testspace()
+#testspace()
