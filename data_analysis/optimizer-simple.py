@@ -37,36 +37,40 @@ class Optimizer:
 
         for event in events:
             event_len = event.length
-            lowest_cost = max # Replace with its current price
+            lowest_cost = sys.maxsize # Replace with its current price
             optimal_start = 0
 
             print(event.appliance)
-            print(temp_available_times[event.appliance])
+            print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
 
             for i in range(len(price_vector) - event_len):
-                if [*range(i,i+event_len,1)] in temp_available_times[event.appliance]:
+                # Check if every timeslot of the event (starting in i) are available timeslots
+                if all(timeslot in temp_available_times[event.appliance] for timeslot in [*range(i,i+event_len,1)]):
+                    # Calculate cost of placement
                     new_cost = np.sum(event.profile * price_vector[i:i+event_len])
-                    print('Im in')
-                    print(i, new_cost)
+                    
+                    # If cost is better than the previous best cost, update
                     if new_cost < lowest_cost:
                         lowest_cost = new_cost
                         optimal_start = i
 
+            # After the event has been placed, we remove its timeslots from the available times for the appliance.
+            # If we have placed a laptop event at 12:00 - 12:30, we remove that time range from the available times for laptops,
+            # so we can't place another laptop in that time range.
             taken_slots = range(optimal_start, optimal_start+event_len,1)
             temp_available_times[event.appliance] = list(set(temp_available_times[event.appliance]) - set(taken_slots))
-            print(taken_slots)
+            print(f'Timeslots where {event.appliance} has been placed: {taken_slots}')
 
             new_schedule.append(Event(appliance=event.appliance, 
                                       profile=event.profile, 
                                       occured=optimal_start))
 
+        '''
         for event in new_schedule:
             print(event.appliance, event.occured)
         return new_schedule
+        '''
 
-
-    def place_event(event: Event, ):
-        return True
     
 #len([ele for ele in temp_available_times[event.appliance] if ele < i or ele >= i + event_len])==0
 
@@ -87,7 +91,7 @@ def main():
     house_3_tas = get_quarter_tas()
     #print(house_3_restricted_times)
     price_data_2015 = create_price_vector_dataset(1420066800, 1451602800)
-    price_vector = np.array(np.repeat(price_data_2015['2015-03-26'],4))
+    price_vector = np.array(np.repeat(price_data_2015['2015-03-28'],4))
     #price_vector = expand_price_vector(price_data_2015['2015-04-04'], 4)
     #print(price_vector)
 
@@ -101,7 +105,7 @@ def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
-    events_on_day = event_fac.select_events_on_day('03-26')
+    events_on_day = event_fac.select_events_on_day('03-28')
 
     optimizer = Optimizer(house_3_tas)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
@@ -124,5 +128,3 @@ def expand_price_vector(price_vector: list, expansion_factor: int) -> list:
 
 main()
 
-  
-  
