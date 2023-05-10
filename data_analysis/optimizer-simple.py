@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from data_analysis import get_data_from_house
 
-from time_associations import get_restricted_times
+from time_associations import get_quarter_tas
 from electricity_price_dataset import read_extract_convert_price_dataset
 from event_factory import EventFactory
 
@@ -25,31 +25,37 @@ class Optimizer:
         self.restricted_times = restricted_times
         self.patterns = patterns
     '''
-    def __init__(self, restricted_times):
-        self.restricted_times = restricted_times
+    def __init__(self, time_assoications):
+        self.time_assoications = time_assoications
     
     # Handle patterns somehow
     
     def optimize_day(self, events, price_vector):
         # List of the newly scheduled events
         new_schedule = list()
-        temp_restricted_times = self.restricted_times
+        temp_available_times = self.time_assoications
 
         for event in events:
             event_len = event.length
-            lowest_cost = np.sum(event.profile * price_vector[0:event_len])
+            lowest_cost = max # Replace with its current price
             optimal_start = 0
+
             print(event.appliance)
-            print(temp_restricted_times[event.appliance])
+            print(temp_available_times[event.appliance])
+
             for i in range(len(price_vector) - event_len):
-                if i not in temp_restricted_times[event.appliance]:
+                if [*range(i,i+event_len,1)] in temp_available_times[event.appliance]:
                     new_cost = np.sum(event.profile * price_vector[i:i+event_len])
+                    print('Im in')
+                    print(i, new_cost)
                     if new_cost < lowest_cost:
                         lowest_cost = new_cost
                         optimal_start = i
-           
-            # Update restricted times
-           
+
+            taken_slots = range(optimal_start, optimal_start+event_len,1)
+            temp_available_times[event.appliance] = list(set(temp_available_times[event.appliance]) - set(taken_slots))
+            print(taken_slots)
+
             new_schedule.append(Event(appliance=event.appliance, 
                                       profile=event.profile, 
                                       occured=optimal_start))
@@ -62,7 +68,8 @@ class Optimizer:
     def place_event(event: Event, ):
         return True
     
-    
+#len([ele for ele in temp_available_times[event.appliance] if ele < i or ele >= i + event_len])==0
+
 
 def create_price_vector_dataset(start: int, end: int):
     price_data = read_extract_convert_price_dataset()
@@ -77,10 +84,10 @@ def create_price_vector_dataset(start: int, end: int):
 
 
 def main():
-    house_3_restricted_times = get_restricted_times()
+    house_3_tas = get_quarter_tas()
     #print(house_3_restricted_times)
     price_data_2015 = create_price_vector_dataset(1420066800, 1451602800)
-    price_vector = np.array(np.repeat(price_data_2015['2015-04-04'],4))
+    price_vector = np.array(np.repeat(price_data_2015['2015-03-26'],4))
     #price_vector = expand_price_vector(price_data_2015['2015-04-04'], 4)
     #print(price_vector)
 
@@ -94,9 +101,9 @@ def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
-    events_on_day = event_fac.select_events_on_day('04-04')
+    events_on_day = event_fac.select_events_on_day('03-26')
 
-    optimizer = Optimizer(house_3_restricted_times)
+    optimizer = Optimizer(house_3_tas)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
     print(price_vector)
 

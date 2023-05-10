@@ -109,19 +109,19 @@ def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
     relative_usage = relative_usage.set_index(index)
     print(relative_usage)
 
-    restricted_times = {}
+    available_times = {}
     for appliance in relative_usage.columns:
         times = []
         for quarter in relative_usage.index:
-            if relative_usage[appliance][quarter] < threshold:
+            if relative_usage[appliance][quarter] >= threshold:
                 times.append(quarter)
-        restricted_times[appliance] = times
+        available_times[appliance] = times
     
-    print(restricted_times)
-    return restricted_times
+    print(available_times)
+    return available_times
 
 # Running it
-def get_restricted_times():
+def get_quarter_tas():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
     frequencies = usage_frequencies(on_off_df)
     return get_quarter_associations(frequencies, 30)
