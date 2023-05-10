@@ -32,11 +32,11 @@ def optimize(events: list, time_associations: dict, price_data: pd.DataFrame, st
     # Copy time_associations into updatable copy that DOES NOT REFER TO THE PREVIOUS
     new_tas = copy.deepcopy(time_associations)
     print("price data?")
-    print(price_data)
+    #print(price_data)
     # Cut power data to fit optimization period.
     cut_price_data = price_data[(price_data['unix_timestamp'] >= timegm(start_time.timetuple())) 
                                    & (price_data['unix_timestamp'] < timegm(end_time.timetuple()))]
-    print(cut_price_data) # FUCKING THING IS EMPTY
+    #print(cut_price_data) # FUCKING THING IS EMPTY
 
     # create a price vector in granularity corresponding to units_in_minutes for the input event. Price vector is delimited by start_time and end_time.
     cut_price_data = cut_price_data.astype({'unix_timestamp':'int'})
@@ -47,9 +47,10 @@ def optimize(events: list, time_associations: dict, price_data: pd.DataFrame, st
     # Change granularity of price vector
     expansion_factor = calculate_expansion_factor(units_in_minutes)
     price_vector = expand_price_vector(price_vector, expansion_factor)
-    print(price_vector)
+    #print(price_vector)
 
     placement_history = dict()
+    result_list = list()
 
     # Perform optimization (This only happens for a single event profile. That is ok, we now have to place it with the subroutines created.)
     # TODO: Take into account event time associations. 
@@ -58,8 +59,11 @@ def optimize(events: list, time_associations: dict, price_data: pd.DataFrame, st
     # GET TIME ASSOCIATION FOR event.appliance. Exclude all dicts not of the same kind of appliance.
     # TODO: One event at a time, entire price vector at a time.
     for event in events:
+        if (event.appliance not in placement_history): placement_history[event.appliance] = list()
         result = perform_optimization(event, price_vector, new_tas, expansion_factor, placement_history)
         update_placement_history(placement_history, result, minutes_per_unit=units_in_minutes)
+        result_list.append(result)
+    #return result_list # should also output the actual results, dumdum.
     return placement_history
 
 # change alg to loop optimization part for each event, and collect results in a list. We can later iterate over this list to easily determine total savings.
@@ -67,11 +71,19 @@ def optimize(events: list, time_associations: dict, price_data: pd.DataFrame, st
 # Takes some event in its time, see if it is contained within all corresponding time pairs.
 def events_overlap(placement_history: dict, new_timeslot, event: Event, minutes_per_unit: int)-> bool:
     result = False
-    end_timeslot = new_timeslot + minutes_per_unit*len(event.profile)
-    for time_interval_tuple in placement_history[event.appliance]:
-        if (new_timeslot >= time_interval_tuple[0] and end_timeslot <= time_interval_tuple[1]):
+    end_timeslot = new_timeslot + pd.Timedelta(minutes=minutes_per_unit*len(event.profile)) 
+    for time_interval_tuple in placement_history[event.appliance]: 
+        #if (time_interval_tuple[0] > end_timeslot and time_interval_tuple[1] < new_timeslot): #TODO not right
+            #print([time_interval_tuple[0], time_interval_tuple[1], new_timeslot, end_timeslot])
+            #print(time_interval_tuple[0] > end_timeslot)
+            #print(time_interval_tuple[1] < new_timeslot)
+            #result = True
+            #break
+        if (not(end_timeslot <= time_interval_tuple[0] or new_timeslot >= time_interval_tuple[1])):
+            print([time_interval_tuple[0], time_interval_tuple[1], new_timeslot, end_timeslot])
             result = True
             break
+    print(result)
     return result
 
 
@@ -79,12 +91,17 @@ def update_placement_history(placement_history: dict, result: tuple, minutes_per
     # if dict does not contain key, add key.
     # if dict has key, it has a list. add to the list
     appliance_name = result[4]
-    if (not appliance_name in placement_history):
-        placement_history[appliance_name] = list()
+    #if (not appliance_name in placement_history):
+     #   placement_history[appliance_name] = list()
 
     # Get duration in 2 datetimes or whatever. Put them in a tuple and append to list.
     start_timestamp = result[3]
-    end_timestamp = start_timestamp.minute + minutes_per_unit*len(result[5].profile)
+    
+    end_timestamp = start_timestamp + pd.Timedelta(minutes=minutes_per_unit*len(result[5].profile))
+    #print("placement hsitory function start and end timestamps:")
+    #print(result[5])
+    #print(start_timestamp)
+    #print(end_timestamp)
     appendage = (start_timestamp, end_timestamp)
     placement_history[appliance_name].append(appendage)
 
@@ -95,7 +112,7 @@ def perform_optimization(event: Event, price_vector: list, new_tas: dict, expans
 
     for i in range(len(price_vector) - len(event.profile)):
         new_timeslot = price_vector[i][TIME]
-        if(is_in_TAs(event, new_timeslot, new_tas, expansion_factor) and not events_overlap(placement_history, new_timeslot, event, expansion_factor)):
+        if(is_in_TAs(event, new_timeslot, new_tas, expansion_factor) and not events_overlap(placement_history, new_timeslot, event, HOUR_IN_MINUTES//expansion_factor)):
             new_cost = get_cost_of_single_timeslot(event.profile, price_vector, timeslot_start=new_timeslot)
             if(new_cost < lowest_cost):
                 lowest_cost = new_cost
@@ -106,7 +123,7 @@ def perform_optimization(event: Event, price_vector: list, new_tas: dict, expans
 
 
 def extract_appliance_TAs(appliance: str, time_associations_all: dict)-> list: 
-    print(f"time_associations_all: {time_associations_all}")
+    #print(f"time_associations_all: {time_associations_all}")
     return time_associations_all[appliance]
 
 
@@ -155,9 +172,9 @@ def expand_price_vector(price_vector: list, expansion_factor: int) -> list:
 def get_cost_of_single_timeslot(event_profile: list, price_vector: list, timeslot_start: datetime)-> float:
     cost_sum = 0
     #Find start element of interest
-    print(len(price_vector))
+    #print(len(price_vector))
     for element in price_vector:
-        print(f"{element}, {timeslot_start}")
+        #print(f"{element}, {timeslot_start}")
         if (element[TIME] == timeslot_start): 
             first_corresponding_element_index = price_vector.index(element)
             break
@@ -167,8 +184,8 @@ def get_cost_of_single_timeslot(event_profile: list, price_vector: list, timeslo
         cost_sum += event_profile[i] * price_vector[element][0]
         i+=1
 
-    print(f"index: {first_corresponding_element_index}")
-    print(f"summed cost: {cost_sum}")
+    #print(f"index: {first_corresponding_element_index}")
+    #print(f"summed cost: {cost_sum}")
 
     return cost_sum
 
@@ -226,8 +243,10 @@ start_time = datetime(2016, 3, 25, 0, 0, 0)
 end_time = datetime(2016, 3, 26, 0, 0, 0)
 events = extract_appliance_level_1_events_within_timeframe(events, start_time, end_time)
 fake_laptop_event = Event(profile=[100, 100, 100, 100, 100], appliance='laptop', occured=datetime(2016, 3, 25, 12, 0, 0))
+fake_laptop_event2 = Event(profile=[100, 100, 100, 100, 100], appliance='laptop', occured=datetime(2016, 3, 25, 13, 0, 0))
 fake_Event_list = list()
 fake_Event_list.append(fake_laptop_event)
+fake_Event_list.append(fake_laptop_event2)
 res = optimize(events=fake_Event_list, time_associations=all_time_associations, price_data=read_extract_convert_price_dataset(), start_time=start_time, end_time=end_time, units_in_minutes=15)
 print(res)
 
