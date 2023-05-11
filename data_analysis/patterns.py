@@ -28,7 +28,7 @@ def optimization_patterns(json_file_path: str):
     for data in extracted_data['patterns']:
         for pattern in data:
             appliances_and_relation = re.split('(>|->|\|)', pattern['pattern'])
-            appliances = (appliances_and_relation[0], appliances_and_relation[2])
+            appliances = [appliances_and_relation[0], appliances_and_relation[2]]
             relation = appliances_and_relation[1]
             for key in pattern['time']:
                 for occurence in pattern['time'][key]:
@@ -45,9 +45,14 @@ def optimization_patterns(json_file_path: str):
     return patterns
 
 
+def write_csv(patterns, file_name: str):
+    with open('./data/patterns/' + file_name + '.csv', 'w') as f:
+        f.write('Date,Appliances,Relation,Appliance start times\n')
+        for p in patterns:
+            f.write(f'{p.date},{p.appliances},{p.relation},{p.appliance_start_times}\n')
+
 def main():
-    patterns = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.15_minconf_0.6/level2.json')
-    for p in patterns:
-        p.print()
+    patterns = optimization_patterns('./TPM/TPM/output/house_3/Experiment_minsup0.1_minconf_0.1/level2.json')
+    #write_csv(patterns, 'house_3_patterns')
 
 main()
