@@ -77,7 +77,6 @@ class Optimizer:
     #   return old_sum - new_sum 
 
     
-#len([ele for ele in temp_available_times[event.appliance] if ele < i or ele >= i + event_len])==0
 
 
 def create_price_vector_dataset(start: int, end: int):
@@ -87,7 +86,7 @@ def create_price_vector_dataset(start: int, end: int):
     price_data_2015['unix_timestamp'] = pd.to_datetime(price_data_2015['unix_timestamp'], unit='s').dt.strftime('%Y-%m-%d')
 
     price_data_2015 = price_data_2015.groupby('unix_timestamp')['GB_GBN_price_day_ahead'].apply(list)
-    #print(price_data_2015)
+    print(price_data_2015)
 
     return price_data_2015
 
@@ -117,19 +116,6 @@ def main():
     print(price_vector)
 
 
-    
-def expand_price_vector(price_vector: list, expansion_factor: int) -> list:
-    # create new list with each value repeating price_vector many times.
-    # now also with an edited time, calculated by increasing successive elements time by expfac/60 many minutes
-    expanded_price_vector = list()
-    hour = 0
-    for price in price_vector:        
-        for i in range(expansion_factor):
-            new_element = (datetime.time(hour, 15*i), float(price)) # Time vector stuff happens here. Need to increment time with 60/expfactor minutes
-            expanded_price_vector.append(new_element)
-        hour = hour + 1
-
-    return expanded_price_vector
 
 main()
 

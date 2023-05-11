@@ -6,6 +6,7 @@ import pandas as pd
 import re
 from datetime import datetime
 
+'''
 # Class for pattern objects. We make objects so they are easier to work with.
 class Level2Pattern:
     def __init__(self, first_appliance, second_appliance, relation, support, confidence):
@@ -43,25 +44,26 @@ def pattern_extraction(json_file_path: str):
             patterns.append(level_2_pattern)
 
     return patterns
+'''
 
-
+# Class for pattern objects. We make objects so they are easier to work with.
 class Patterns:
     def __init__(self, date, appliances, relation, start_times):
-        self.date = date
-        self.appliances = appliances
-        self.relation = relation
-        self.start_times = start_times
+        self.date = date                         # month and day pattern occur
+        self.appliances = appliances             # appliances within pattern
+        self.relation = relation                 # relation between appliances (pattern type)
+        self.appliance_start_times = start_times # start time of each appliance in pattern
     
     def print(self):
-        print(f'{self.date} | {self.appliances} | {self.relation} | {self.start_times}')
+        print(f'{self.date} | {self.appliances} | {self.relation} | {self.appliance_start_times}')
 
 
 def optimization_patterns(json_file_path: str):
     extracted_data = pd.read_json(json_file_path)
-    print(extracted_data)
 
     patterns = list()
 
+    # Holy shit, 5-double for-loop!!
     for data in extracted_data['patterns']:
         for pattern in data:
             appliances_and_relation = re.split('(>|->|\|)', pattern['pattern'])
@@ -70,14 +72,16 @@ def optimization_patterns(json_file_path: str):
             for key in pattern['time']:
                 for occurence in pattern['time'][key]:
                     date = datetime.strptime(occurence[0][0], '%Y-%m-%d %H:%M:%S').strftime('%m-%d')
-                    start_times = (datetime.strptime(occurence[0][0], '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S'), 
-                                   datetime.strptime(occurence[1][0], '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S'))
-                    
+                    start_times = list()
+                    for i in range(len(occurence)):
+                        start_times.append(datetime.strptime(occurence[i][0], '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S'))
+                        
                     patterns.append(Patterns(date, appliances, relation, start_times))
     
     patterns.sort(key=lambda pattern: pattern.date)
 
     return patterns
+
 
 def main():
     patterns = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.15_minconf_0.6/level2.json')
