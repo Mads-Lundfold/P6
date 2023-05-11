@@ -62,9 +62,6 @@ def read_patterns_csv(file_path: str):
         for row in csvreader:
             patterns.append(Patterns(row[0], row[1], row[2], row[3]))
 
-    for p in patterns:
-        p.print()
-
     return patterns
 
 
