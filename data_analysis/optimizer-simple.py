@@ -65,11 +65,16 @@ class Optimizer:
                                       profile=event.profile, 
                                       occured=optimal_start))
 
-        '''
-        for event in new_schedule:
-            print(event.appliance, event.occured)
-        return new_schedule
-        '''
+    # def find_daily_savings(old_events, new_events, price_vector)
+    #   old_sum = 0
+    #   new_sum = 0
+    #   for event in old_events:
+    #       cost = np.sum(event.profile * price_vector[event.occured : event.occured+event.length])
+    #       old_sum = old_sum + cost
+    #   for event in new_events:
+    #       cost = np.sum(event.profile * price_vector[event.occured : event.occured+event.length])
+    #       new_sum = new_sum + cost  
+    #   return old_sum - new_sum 
 
     
 #len([ele for ele in temp_available_times[event.appliance] if ele < i or ele >= i + event_len])==0
