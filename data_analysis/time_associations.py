@@ -122,7 +122,7 @@ def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
 
 # Running it
 def get_quarter_tas():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3) 
+    watt_df, on_off_df = get_data_from_house(house_number = house_2) 
     frequencies = usage_frequencies(on_off_df)
     return get_quarter_associations(frequencies, 30)
     #time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)

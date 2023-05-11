@@ -38,7 +38,7 @@ class Optimizer:
         for event in events:
             event_len = event.length
             lowest_cost = sys.maxsize # Replace with its current price
-            optimal_start = 0
+            optimal_start = event.occured
 
             print(event.appliance)
             print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
