@@ -8,6 +8,8 @@ from data_analysis import get_data_from_house
 from time_associations import get_quarter_tas
 from electricity_price_dataset import read_extract_convert_price_dataset
 from event_factory import EventFactory
+from level_2_filter import filter_level_2_events
+from patterns import optimization_patterns
 
 # Dummy Event class for testing purposes
 class Event:
@@ -110,6 +112,9 @@ def main():
 
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
     events_on_day = event_fac.select_events_on_day('03-28')
+
+    print(len(event_fac.events))
+    filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
 
     optimizer = Optimizer(house_3_tas)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
