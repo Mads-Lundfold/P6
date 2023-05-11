@@ -4,6 +4,7 @@
 
 import pandas as pd
 import re
+import csv
 from datetime import datetime
 
 
@@ -45,14 +46,31 @@ def optimization_patterns(json_file_path: str):
     return patterns
 
 
-def write_csv(patterns, file_name: str):
+def write_patterns_csv(patterns, file_name: str):
     with open('./data/patterns/' + file_name + '.csv', 'w') as f:
-        f.write('Date,Appliances,Relation,Appliance start times\n')
+        f.write('Date;Appliances;Relation;Appliance start times\n')
         for p in patterns:
-            f.write(f'{p.date},{p.appliances},{p.relation},{p.appliance_start_times}\n')
+            f.write(f'{p.date};{p.appliances};{p.relation};{p.appliance_start_times}\n')
+        
+
+def read_patterns_csv(file_path: str):
+    patterns = list()
+
+    with open(file_path, 'r') as file:
+        csvreader = csv.reader(file, delimiter=';')
+        next(csvreader)
+        for row in csvreader:
+            patterns.append(Patterns(row[0], row[1], row[2], row[3]))
+
+    for p in patterns:
+        p.print()
+
+    return patterns
+
 
 def main():
-    patterns = optimization_patterns('./TPM/TPM/output/house_3/Experiment_minsup0.1_minconf_0.1/level2.json')
-    #write_csv(patterns, 'house_3_patterns')
+    patterns = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.15_minconf_0.6/level2.json')
+    #write_patterns_csv(patterns, 'house_1_2014_patterns')
+    #read_patterns_csv('./data/patterns/house_1_2014_patterns.csv')
 
-main()
+#main()
