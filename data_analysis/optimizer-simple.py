@@ -30,42 +30,61 @@ class Optimizer:
     def __init__(self, time_assoications):
         self.time_assoications = time_assoications
     
-    # Handle patterns somehow
     
     def optimize_day(self, events, price_vector):
         # List of the newly scheduled events
         new_schedule = list()
         temp_available_times = self.time_assoications
 
+        # call level2-filter to get list of lvl2 dicts
+        # lvl2[relation] = {>/->/|}
+        # lvl2[events] = {event1,event2,...}
+
+        # for pattern in lvl2:
+        #   if pattern['relation'] == '>'
+        #       place_event(pattern['events'][0], ..., time_start, time_end)
+        #       place_event(pattern['events'][1], ..., event1_start, event1_end)
+        #   if pattern['relation'] == '->'
+        #       place_event(pattern['events'][0], ..., time_start, time_end - place_event(pattern['events'][1].length)
+        #       place_event(pattern['events'][1], ..., event1_end, time_end)
+        #   if pattern['relation'] == '|'
+        #       place_event(pattern['events'][0], ..., time_start, time_end - place_event(pattern['events'][1].length)
+        #       place_event(pattern['events'][1], ..., event1_end - event2_length, event1_end + event2_length)
+
         for event in events:
-            event_len = event.length
-            lowest_cost = sys.maxsize # Replace with its current price
-            optimal_start = event.occured
+            self.place_event(event, price_vector, temp_available_times, new_schedule)
+        
 
-            print(event.appliance)
-            print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
+    def place_event(self, event: Event, price_vector: list, temp_available_times: dict, new_schedule: list):
+        
+        event_len = event.length
+        lowest_cost = sys.maxsize # Replace with its current price
+        optimal_start = event.occured
 
-            for i in range(len(price_vector) - event_len):
-                # Check if every timeslot of the event (starting in i) are available timeslots
-                if all(timeslot in temp_available_times[event.appliance] for timeslot in [*range(i,i+event_len,1)]):
-                    # Calculate cost of placement
-                    new_cost = np.sum(event.profile * price_vector[i:i+event_len])
-                    
-                    # If cost is better than the previous best cost, update
-                    if new_cost < lowest_cost:
-                        lowest_cost = new_cost
-                        optimal_start = i
+        print(event.appliance)
+        print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
 
-            # After the event has been placed, we remove its timeslots from the available times for the appliance.
-            # If we have placed a laptop event at 12:00 - 12:30, we remove that time range from the available times for laptops,
-            # so we can't place another laptop in that time range.
-            taken_slots = range(optimal_start, optimal_start+event_len,1)
-            temp_available_times[event.appliance] = list(set(temp_available_times[event.appliance]) - set(taken_slots))
-            print(f'Timeslots where {event.appliance} has been placed: {taken_slots}')
+        for i in range(len(price_vector) - event_len):
+            # Check if every timeslot of the event (starting in i) are available timeslots
+            if all(timeslot in temp_available_times[event.appliance] for timeslot in [*range(i,i+event_len,1)]):
+                # Calculate cost of placement
+                new_cost = np.sum(event.profile * price_vector[i:i+event_len])
+                
+                # If cost is better than the previous best cost, update
+                if new_cost < lowest_cost:
+                    lowest_cost = new_cost
+                    optimal_start = i
 
-            new_schedule.append(Event(appliance=event.appliance, 
-                                      profile=event.profile, 
-                                      occured=optimal_start))
+        # After the event has been placed, we remove its timeslots from the available times for the appliance.
+        # If we have placed a laptop event at 12:00 - 12:30, we remove that time range from the available times for laptops,
+        # so we can't place another laptop in that time range.
+        taken_slots = range(optimal_start, optimal_start+event_len,1)
+        temp_available_times[event.appliance] = list(set(temp_available_times[event.appliance]) - set(taken_slots))
+        print(f'Timeslots where {event.appliance} has been placed: {taken_slots}')
+
+        new_schedule.append(Event(appliance=event.appliance, 
+                                    profile=event.profile, 
+                                    occured=optimal_start))
 
     # def find_daily_savings(old_events, new_events, price_vector)
     #   old_sum = 0
@@ -113,8 +132,10 @@ def main():
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
     events_on_day = event_fac.select_events_on_day('03-28')
 
+    event_fac.print_events_info()
+
     print(len(event_fac.events))
-    filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
+    #filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/house3/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
 
     optimizer = Optimizer(house_3_tas)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
