@@ -14,7 +14,7 @@ def do_events_match(pattern: Patterns, level_1_event: Event)-> bool:
     return result
 
 
-def filter_level_2_events(level_1_events: list[Event], level_2_events: list[Patterns])-> list[dict]:
+def filter_level_2_events(level_1_events: list, level_2_events: list)-> list:
     lvl_2_patterns = list()
     for pattern in level_2_events:
         lvl_2_dict = dict()
@@ -24,6 +24,7 @@ def filter_level_2_events(level_1_events: list[Event], level_2_events: list[Patt
             if(do_events_match(pattern, lvl_1_event)):
                 lvl_2_dict['events'].append(lvl_1_event)
                 #level_1_events.remove(lvl_1_event)
-        lvl_2_patterns.append(lvl_2_dict)
+        if len(lvl_2_dict['events']) == 2:
+            lvl_2_patterns.append(lvl_2_dict)
     return lvl_2_patterns
 

@@ -65,8 +65,8 @@ def read_patterns_csv(file_path: str):
     return patterns
 
 
-def main():
-    patterns = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.15_minconf_0.6/level2.json')
+#def main():
+    #patterns = optimization_patterns('./TPM/TPM/output/house3/Experiment_minsup0.1_minconf_0.1/level2.json')
     #write_patterns_csv(patterns, 'house_1_2014_patterns')
     #read_patterns_csv('./data/patterns/house_1_2014_patterns.csv')
 

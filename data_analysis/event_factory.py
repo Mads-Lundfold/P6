@@ -55,16 +55,19 @@ class EventFactory:
 
     def print_events_info(self):
         for event in self.events:
-            print(event.occured)
+            print(event.occured, event.timeslot)
 
 
-# Dummy Event class for testing purposes
+# TODO: Make timeslot granularity dynamic instead of 15 minutes
 class Event:
-    def __init__(self, appliance, profile, occured) -> None:
+    def __init__(self, appliance, profile, occured: datetime.datetime) -> None:
         self.appliance = appliance
         self.profile = profile
         self.occured = occured
+        self.timeslot = int(((self.occured.hour * 60) + (self.occured.minute)) / 15)
         self.length = len(profile)
+        self.endslot = self.timeslot + self.length
+        self.placed = False
 
 
 def testspace():
@@ -81,3 +84,4 @@ def testspace():
     event_fac.print_events_info()
 
 #testspace()
+
