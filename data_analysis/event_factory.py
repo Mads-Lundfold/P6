@@ -26,7 +26,7 @@ class EventFactory:
             # Create event object
             event = Event(appliance = appliance,
                           profile = self.get_profile(start, end, appliance),
-                          occured = datetime.datetime.fromtimestamp(start))
+                          occured = datetime.datetime.utcfromtimestamp(start))
                 
             events.append(event)
         
