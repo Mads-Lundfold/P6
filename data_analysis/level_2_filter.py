@@ -25,7 +25,6 @@ def filter_level_2_events(level_1_events: list[Event], level_2_events: list[Patt
             if(do_events_match(pattern, lvl_1_event)):
                 lvl_2_dict['events'].append(lvl_1_event)
                 level_1_events.remove(lvl_1_event)
-        lvl_2_dict['events'].reverse()  # flip so we have expected order lvl 1 -> lvl 2
         lvl_2_patterns.append(lvl_2_dict)
     return lvl_2_patterns
 
