@@ -111,10 +111,16 @@ def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
-    events_on_day = event_fac.select_events_on_day('03-28')
+    events_on_day = event_fac.select_events_on_day('03-13')
 
-    print(len(event_fac.events))
-    filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
+    lvl_2_events_all = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.1_minconf_0.1/level2.json')
+    patterns_on_day = list(filter(lambda pattern: pattern.date == '03-13', lvl_2_events_all))
+    print(f"Patterns on day: {patterns_on_day}")
+
+    lvl_2_events = filter_level_2_events(events_on_day, patterns_on_day) # Get level 2 events, does NOT remove from lvl 1 list.
+
+    # logic for removing lvl 1 events found in lvl 2
+    # optimize lvl 2 before lvl 1.
 
     optimizer = Optimizer(house_3_tas)
     optimizer.optimize_day(events=events_on_day, price_vector=price_vector)
