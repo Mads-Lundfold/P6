@@ -45,7 +45,67 @@ class Optimizer:
 
         for event in events:
             self.place_event(event, price_vector, temp_available_times, time_start, time_end)
+
+
+    def optimize_day_no_patterns(self, events, price_vector, patterns):
+        # List of the newly scheduled events
+        #new_schedule = list()
+        temp_available_times = self.time_assoications
+        time_start = 0
+        time_end = len(price_vector) - 1
+
+        for event in events:
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)        
         
+    
+    def optimize_day_no_tas(self, events, price_vector, patterns):
+        # List of the newly scheduled events
+        #new_schedule = list()
+        temp_available_times = self.time_assoications
+
+        for key in temp_available_times:
+            temp_available_times[key] = list(range(0, 95))
+
+        time_start = 0
+        time_end = len(price_vector) - 1
+
+        # call level2-filter to get list of lvl2 dicts}
+        level2 = filter_level_2_events(events,patterns)
+        print(level2)
+
+        # Deconstruct level k patterns to level 2 patterns
+
+        for pattern in level2:
+            if pattern['relation'] == '>':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot, pattern['events'][0].endslot)
+            if pattern['relation'] == '->':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
+            if pattern['relation'] == '|':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
+
+        for event in events:
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)  
+
+
+
+    def optimize_day_no_patterns_no_tas(self, events, price_vector, patterns):
+        # List of the newly scheduled events
+        #new_schedule = list()
+        temp_available_times = self.time_assoications
+
+        for key in temp_available_times:
+            temp_available_times[key] = list(range(0, 95))
+
+        time_start = 0
+        time_end = len(price_vector) - 1
+
+        for event in events:
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)  
+
+
 
     def place_event(self, event: Event, price_vector: list, temp_available_times: dict, start_time: int, end_time: int):
         if event.placed:
