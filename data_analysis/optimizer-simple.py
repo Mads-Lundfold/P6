@@ -14,13 +14,7 @@ from patterns import optimization_patterns, read_patterns_csv
 
 
 class Optimizer:
-    '''
-    def __init__(self, events: Event, price_data, restricted_times, patterns):
-        self.events = events
-        self.price_data = price_data
-        self.restricted_times = restricted_times
-        self.patterns = patterns
-    '''
+    
     def __init__(self, time_assoications):
         self.time_assoications = time_assoications
     
@@ -36,6 +30,8 @@ class Optimizer:
         level2 = filter_level_2_events(events,patterns)
         print(level2)
 
+        # Deconstruct level k patterns to level 2 patterns
+
         for pattern in level2:
             if pattern['relation'] == '>':
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
@@ -44,7 +40,7 @@ class Optimizer:
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
             if pattern['relation'] == '|':
-                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
 
         for event in events:
@@ -108,13 +104,10 @@ def create_price_vector_dataset(start: int, end: int):
 
 
 def main():
-    house_3_tas = get_quarter_tas()
-    #print(house_3_restricted_times)
+    # Get price data
     price_data_2015 = create_price_vector_dataset(1420066800, 1451602800)
-    price_vector = np.array(np.repeat(price_data_2015['2015-03-27'],4))
-    #price_vector = expand_price_vector(price_data_2015['2015-04-04'], 4)
-    #print(price_vector)
 
+    # Get events for house
     dataset = str(sys.argv[1])
     house_1 = dataset + "/house_1"
     house_2 = dataset + "/house_2"
@@ -125,36 +118,40 @@ def main():
     watt_df, on_off_df = get_data_from_house(house_number = house_3) 
 
     event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
-    events_on_day = event_fac.select_events_on_day('03-27')
 
+    # Get patterns for house
     patterns = optimization_patterns('C:/Users/Mads/Bachelor/P6/data_analysis/TPM/TPM/output/house_3/Experiment_minsup0.1_minconf_0.1/level2.json')
-    patterns_on_day = list(filter(lambda pattern: pattern.date == '03-27', patterns))
 
-    #event_fac.print_events_info()
-
-    #print(len(event_fac.events))
-    #filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/house3/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
+    # Get time associations
+    house_3_tas = get_quarter_tas()    
 
     optimizer = Optimizer(house_3_tas)
 
-    cost_before = optimizer.find_total_cost_of_events(events_on_day, price_vector)
-    optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
-    cost_after = optimizer.find_total_cost_of_events(events_on_day, price_vector)
+    # Optimize
+    # Create cost before and after optimization
+    total_cost_before = 0
+    total_cost_after = 0
 
-    print(f'Cost before: {cost_before}\nCost after: {cost_after}\nSavings: {cost_before-cost_after}')
+    # Optimize over multiple days in time range, on a daily basis
+    day_range = pd.date_range(start='3/3/2014', end='3/27/2014')
+    for i in day_range:
+        day = i.date().strftime('%m-%d')
+        next_day = (i.date() + datetime.timedelta(days=1)).strftime('%m-%d')
+        print(day)
+        price_vector = np.array(np.repeat(price_data_2015['2015-' + day],4))
+        next_day_price_vector = np.array(np.repeat(price_data_2015['2015-' + next_day],4))
 
-    '''
-    print('Before:')
-    for event in events_on_day:
-        print(event.timeslot)
-    optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
-    print('After')
-    for event in events_on_day:
-        print(event.timeslot)
-    '''
+        events_on_day = event_fac.select_events_on_day(day)
+        patterns_on_day = list(filter(lambda pattern: pattern.date == day, patterns))
+
+        total_cost_before = total_cost_before + optimizer.find_total_cost_of_events(events_on_day, np.append(price_vector, next_day_price_vector))
+        optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
+        total_cost_after = total_cost_after + optimizer.find_total_cost_of_events(events_on_day, np.append(price_vector, next_day_price_vector))
+
+    print(f'Cost before: {total_cost_before}\nCost after: {total_cost_after}\nSavings: {total_cost_before-total_cost_after}')
+
     
 
 
 
 main()
-
