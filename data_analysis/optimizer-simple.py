@@ -34,6 +34,7 @@ class Optimizer:
 
         for pattern in level2:
             if pattern['relation'] == '>':
+                print(f"Placing contains between {pattern['events'][0].appliance} and {pattern['events'][1].appliance}")
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot, pattern['events'][0].endslot)
             if pattern['relation'] == '->':
@@ -77,6 +78,7 @@ class Optimizer:
 
         for pattern in level2:
             if pattern['relation'] == '>':
+                print(f"Placing contains between {pattern['events'][0].appliance} and {pattern['events'][1].appliance}")
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot, pattern['events'][0].endslot)
             if pattern['relation'] == '->':
@@ -117,7 +119,7 @@ class Optimizer:
         optimal_start = event.timeslot
 
         #print(event.appliance)
-        #print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
+        print(f'Available timeslots for {event.appliance}: \n {temp_available_times[event.appliance]}')
 
         for i in range(start_time, end_time - event_len):
             # Check if every timeslot of the event (starting in i) are available timeslots
@@ -138,14 +140,18 @@ class Optimizer:
         print(f'Timeslots where {event.appliance} has been placed: {taken_slots}')
 
         event.timeslot = optimal_start
+        event.endslot = event.timeslot + event.length
         event.placed = True
         
 
     def find_total_cost_of_events(self, events: list, price_vector: list):
         total_cost = 0
         for event in events:
-            cost = np.sum(event.profile * price_vector[event.timeslot : event.timeslot+event.length])
-            total_cost = total_cost + cost
+            try:
+                cost = np.sum(event.profile * price_vector[event.timeslot : event.timeslot+event.length])
+                total_cost = total_cost + cost
+            except ValueError:
+                print(f"{event.appliance} lasted more than 2 days, therefore couldn't be calculated")
         return total_cost
 
     
@@ -168,24 +174,18 @@ def main():
     price_data_2015 = create_price_vector_dataset(1420066800, 1451602800)
 
     # Get events for house
-    dataset = str(sys.argv[1])
-    house_1 = dataset + "/house_1"
-    house_2 = dataset + "/house_2"
-    house_3 = dataset + "/house_3"
-    house_4 = dataset + "/house_4"
-    house_5 = dataset + "/house_5"
+    watt_df = pd.read_csv('./dataframes/house_1_2014_15min_watts.csv').set_index('Time')
+    print(watt_df)
 
-    watt_df, on_off_df = get_data_from_house(house_number = house_3) 
-
-    event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_3_events.csv')
+    event_fac = EventFactory(watt_df=watt_df, events_csv_path='./dataframes/house_1_2014.csv')
 
     # Get patterns for house
-    patterns = optimization_patterns('C:/Users/Mads/Bachelor/P6/data_analysis/TPM/TPM/output/house_3/Experiment_minsup0.1_minconf_0.1/level2.json')
+    patterns = optimization_patterns('./TPM/TPM/output/Experiment_minsup0.15_minconf_0.6/level2.json')
 
     # Get time associations
-    house_3_tas = get_quarter_tas()    
+    house_tas = get_quarter_tas()    
 
-    optimizer = Optimizer(house_3_tas)
+    optimizer = Optimizer(house_tas)
 
     # Optimize
     # Create cost before and after optimization
@@ -193,7 +193,7 @@ def main():
     total_cost_after = 0
 
     # Optimize over multiple days in time range, on a daily basis
-    day_range = pd.date_range(start='3/3/2014', end='3/27/2014')
+    day_range = pd.date_range(start='7/1/2014', end='7/1/2014')
     for i in day_range:
         day = i.date().strftime('%m-%d')
         next_day = (i.date() + datetime.timedelta(days=1)).strftime('%m-%d')
@@ -206,6 +206,7 @@ def main():
 
         total_cost_before = total_cost_before + optimizer.find_total_cost_of_events(events_on_day, np.append(price_vector, next_day_price_vector))
         optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
+        #optimizer.optimize_day_no_patterns_no_tas(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
         total_cost_after = total_cost_after + optimizer.find_total_cost_of_events(events_on_day, np.append(price_vector, next_day_price_vector))
 
     print(f'Cost before: {total_cost_before}\nCost after: {total_cost_after}\nSavings: {total_cost_before-total_cost_after}')

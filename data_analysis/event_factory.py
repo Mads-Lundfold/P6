@@ -55,7 +55,7 @@ class EventFactory:
 
     def print_events_info(self):
         for event in self.events:
-            print(event.occured, event.timeslot)
+            print(event.occured, event.timeslot, event.length)
 
 
 # TODO: Make timeslot granularity dynamic instead of 15 minutes
