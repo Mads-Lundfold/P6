@@ -44,8 +44,8 @@ class Optimizer:
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
             if pattern['relation'] == '|':
-                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
-                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot - pattern['events'][1].length, pattern['events'][0].endslot + pattern['events'][1].length)
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
 
         for event in events:
             self.place_event(event, price_vector, temp_available_times, time_start, time_end)
