@@ -85,16 +85,12 @@ class Optimizer:
         event.placed = True
         
 
-    # def find_daily_savings(old_events, new_events, price_vector)
-    #   old_sum = 0
-    #   new_sum = 0
-    #   for event in old_events:
-    #       cost = np.sum(event.profile * price_vector[event.occured : event.occured+event.length])
-    #       old_sum = old_sum + cost
-    #   for event in new_events:
-    #       cost = np.sum(event.profile * price_vector[event.occured : event.occured+event.length])
-    #       new_sum = new_sum + cost  
-    #   return old_sum - new_sum 
+    def find_total_cost_of_events(self, events: list, price_vector: list):
+        total_cost = 0
+        for event in events:
+            cost = np.sum(event.profile * price_vector[event.timeslot : event.timeslot+event.length])
+            total_cost = total_cost + cost
+        return total_cost
 
     
 
@@ -140,6 +136,14 @@ def main():
     #filter_level_2_events(event_fac.events, optimization_patterns('./TPM/TPM/output/house3/Experiment_minsup0.1_minconf_0.1/level2.json')) # remove lvl 2 events from lvl 1 list.
 
     optimizer = Optimizer(house_3_tas)
+
+    cost_before = optimizer.find_total_cost_of_events(events_on_day, price_vector)
+    optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
+    cost_after = optimizer.find_total_cost_of_events(events_on_day, price_vector)
+
+    print(f'Cost before: {cost_before}\nCost after: {cost_after}\nSavings: {cost_before-cost_after}')
+
+    '''
     print('Before:')
     for event in events_on_day:
         print(event.timeslot)
@@ -147,6 +151,7 @@ def main():
     print('After')
     for event in events_on_day:
         print(event.timeslot)
+    '''
     
 
 
