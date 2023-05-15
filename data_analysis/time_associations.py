@@ -123,7 +123,8 @@ def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
 # Running it
 def get_quarter_tas():
     watt_df = pd.read_csv('./dataframes/house_1_2014_15min_watts.csv').set_index('Time')
-    on_off_df = watt_df.astype(bool)
+    #on_off_df = watt_df.astype(bool)
+    on_off_df = pd.read_csv('./dataframes/house_1_2014_15min_on_off.csv').set_index('Time')
     print(on_off_df)
     frequencies = usage_frequencies(on_off_df)
     plot_frequencies(frequencies)

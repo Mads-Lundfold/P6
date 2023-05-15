@@ -32,9 +32,12 @@ def write_dataframe_to_csv_headers(dataframe : pd.DataFrame, filename : str) -> 
 def generate_2014_h1_thin()-> None:
     watt_df, on_off_df = get_data_from_house(house_1)
     watt_df = watt_df[(watt_df.index >= YEAR_2014_GMT_BEGIN) & (watt_df.index <= YEAR_2015_GMT_BEGIN)]
+    on_off_df = on_off_df[(on_off_df.index >= YEAR_2014_GMT_BEGIN) & (on_off_df.index <= YEAR_2015_GMT_BEGIN)]
     print(watt_df)
+    print(on_off_df)
     watt_df = remove_appliances(watt_df)
     write_dataframe_to_csv_headers(watt_df, 'house_1_2014_15min_watts')
+    write_dataframe_to_csv_headers(on_off_df, 'house_1_2014_15min_on_off')
 
     return
 

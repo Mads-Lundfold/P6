@@ -204,6 +204,7 @@ def main():
         events_on_day = event_fac.select_events_on_day(day)
         patterns_on_day = list(filter(lambda pattern: pattern.date == day, patterns))
 
+        # Use total_cost_before to calculate total cost before optimization - a baseline. 
         total_cost_before = total_cost_before + optimizer.find_total_cost_of_events(events_on_day, np.append(price_vector, next_day_price_vector))
         optimizer.optimize_day(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
         #optimizer.optimize_day_no_patterns_no_tas(events=events_on_day, price_vector=price_vector, patterns=patterns_on_day)
