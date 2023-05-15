@@ -48,7 +48,7 @@ class Optimizer:
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot - pattern['events'][1].length, pattern['events'][0].endslot + pattern['events'][1].length)
 
         for event in events:
-            self.place_event(event, price_vector, temp_available_times, 0, len(price_vector))
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)
         
 
     def place_event(self, event: Event, price_vector: list, temp_available_times: dict, start_time: int, end_time: int):

@@ -26,7 +26,7 @@ def read_extract_convert_price_dataset():
     df = df.rename(columns={"utc_timestamp": "unix_timestamp"})
 
     # Convert GB_GBN_price_day_ahead from string to float, then to integer and then into WH from MWh
-    df["GB_GBN_price_day_ahead"] = df["GB_GBN_price_day_ahead"].astype(float) #/ 1000000
+    df["GB_GBN_price_day_ahead"] = df["GB_GBN_price_day_ahead"].astype(float) / 1000000
 
     return df
 
