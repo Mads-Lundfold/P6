@@ -48,7 +48,8 @@ class EventFactory:
         events_on_day = list()
         for event in self.events:
             if event.occured.strftime('%m-%d') == month_day:
-                events_on_day.append(event)
+                if event.length < 96: # This check is for removing events longer than a day for bugfixing
+                    events_on_day.append(event)
         
         return events_on_day
         
