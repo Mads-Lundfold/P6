@@ -33,9 +33,9 @@ class Optimizer:
         # Deconstruct level k patterns to level 2 patterns
 
         for pattern in level2:
+            eventA = pattern['events'][0]
+            eventB = pattern['events'][1]
             if pattern['relation'] == '>':
-                eventA = pattern['events'][0]
-                eventB = pattern['events'][1]
                 #print(eventA.appliance, eventA.total_consumption)
                 #print(eventB.appliance, eventB.total_consumption)
                 #print(f'FOUND CONTAINS PATTERN BETWEEN {eventA.appliance} AND {eventB.appliance}')
@@ -48,8 +48,12 @@ class Optimizer:
                     self.place_event(eventB, price_vector, temp_available_times, time_start, time_end)
                     self.place_event(eventA, price_vector, temp_available_times, eventB.timeslot - (eventA.length - eventB.length), eventB.endslot + (eventA.length - eventB.length))
             if pattern['relation'] == '->':
-                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
-                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
+                if eventA.total_consumption >= eventB.total_consumption:
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, time_end - eventB.length)
+                    self.place_event(eventB, price_vector, temp_available_times, eventA.endslot, time_end)
+                elif eventA.total_consumption < eventB.total_consumption:
+                    self.place_event(eventB, price_vector, temp_available_times, time_start + eventA.length, time_end)
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, eventB.timeslot)
             if pattern['relation'] == '|':
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
@@ -90,8 +94,12 @@ class Optimizer:
                     self.place_event(eventB, price_vector, temp_available_times, time_start, time_end)
                     self.place_event(eventA, price_vector, temp_available_times, eventB.timeslot - (eventA.length - eventB.length), eventB.endslot + (eventA.length - eventB.length))
             if pattern['relation'] == '->':
-                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
-                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
+                if eventA.length >= eventB.length:
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, time_end - eventB.length)
+                    self.place_event(eventB, price_vector, temp_available_times, eventA.endslot, time_end)
+                elif eventA.length < eventB.length:
+                    self.place_event(eventB, price_vector, temp_available_times, time_start + eventA.length, time_end)
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, eventB.timeslot)
             if pattern['relation'] == '|':
                 self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
                 self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
