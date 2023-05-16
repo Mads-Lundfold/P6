@@ -130,7 +130,7 @@ def get_quarter_tas():
     frequencies = usage_frequencies(on_off_df)
     
     #plot_frequencies(frequencies)
-    return get_quarter_associations(frequencies, 30)
+    return get_quarter_associations(frequencies, 10)
     #time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)
     #return unusable_time_intervals_all_appliances
 

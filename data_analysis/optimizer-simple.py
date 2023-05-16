@@ -18,6 +18,87 @@ class Optimizer:
     def __init__(self, time_assoications):
         self.time_associations = time_assoications
     
+
+    def optimize_day_by_consumption(self, events, price_vector, patterns):
+        temp_available_times = self.time_associations.copy()
+        time_start = 0
+        time_end = 95 # hard coded to 15 minute timeslots in 24 hours
+
+        # call level2-filter to get list of lvl2 dicts
+        level2 = filter_level_2_events(events,patterns)
+
+        # Sort events so highest consumption is first.
+        events.sort(key=lambda e: e.total_consumption, reverse=True)
+
+        # Deconstruct level k patterns to level 2 patterns
+
+        for pattern in level2:
+            if pattern['relation'] == '>':
+                eventA = pattern['events'][0]
+                eventB = pattern['events'][1]
+                #print(eventA.appliance, eventA.total_consumption)
+                #print(eventB.appliance, eventB.total_consumption)
+                #print(f'FOUND CONTAINS PATTERN BETWEEN {eventA.appliance} AND {eventB.appliance}')
+                if eventA.total_consumption >= eventB.total_consumption:
+                    #print('PLACING A FIRST')
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, time_end)
+                    self.place_event(eventB, price_vector, temp_available_times, eventA.timeslot, eventA.endslot)
+                elif eventA.total_consumption < eventB.total_consumption:
+                    #print('PLACING B FIRST')
+                    self.place_event(eventB, price_vector, temp_available_times, time_start, time_end)
+                    self.place_event(eventA, price_vector, temp_available_times, eventB.timeslot - (eventA.length - eventB.length), eventB.endslot + (eventA.length - eventB.length))
+            if pattern['relation'] == '->':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
+            if pattern['relation'] == '|':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
+
+        for event in events:
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)
+
+    def optimize_day_by_duration(self, events, price_vector, patterns):
+        # List of the newly scheduled events
+        #new_schedule = list()
+        temp_available_times = self.time_associations.copy()
+        time_start = 0
+        time_end = 95 # hard coded to 15 minute timeslots in 24 hours
+
+        
+        # call level2-filter to get list of lvl2 dicts
+        level2 = filter_level_2_events(events,patterns)
+        #print(level2)
+
+        # Sort events so highest consumption is first.
+        events.sort(key=lambda e: e.length, reverse=True)
+
+        # Deconstruct level k patterns to level 2 patterns
+
+        for pattern in level2:
+            if pattern['relation'] == '>':
+                eventA = pattern['events'][0]
+                eventB = pattern['events'][1]
+                #print(eventA.appliance, eventA.total_consumption)
+                #print(eventB.appliance, eventB.total_consumption)
+                #print(f'FOUND CONTAINS PATTERN BETWEEN {eventA.appliance} AND {eventB.appliance}')
+                if eventA.length >= eventB.length:
+                    #print('PLACING A FIRST')
+                    self.place_event(eventA, price_vector, temp_available_times, time_start, time_end)
+                    self.place_event(eventB, price_vector, temp_available_times, eventA.timeslot, eventA.endslot)
+                elif eventA.length < eventB.length:
+                    #print('PLACING B FIRST')
+                    self.place_event(eventB, price_vector, temp_available_times, time_start, time_end)
+                    self.place_event(eventA, price_vector, temp_available_times, eventB.timeslot - (eventA.length - eventB.length), eventB.endslot + (eventA.length - eventB.length))
+            if pattern['relation'] == '->':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].endslot, time_end)
+            if pattern['relation'] == '|':
+                self.place_event(pattern['events'][0], price_vector, temp_available_times, time_start, time_end - pattern['events'][1].length)
+                self.place_event(pattern['events'][1], price_vector, temp_available_times, pattern['events'][0].timeslot + 1, pattern['events'][0].endslot + pattern['events'][1].length - 1)
+
+        for event in events:
+            self.place_event(event, price_vector, temp_available_times, time_start, time_end)
+
     
     def optimize_day(self, events, price_vector, patterns):
         # List of the newly scheduled events
