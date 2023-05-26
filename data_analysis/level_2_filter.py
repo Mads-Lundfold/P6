@@ -9,7 +9,7 @@ def do_events_match(pattern: Patterns, level_1_event: Event)-> bool:
     for i in range(number_of_appliances):
         if (datetime.strptime(pattern.appliance_start_times[i],'%H:%M:%S').time() == level_1_event.occured.time() and pattern.appliances[i] == level_1_event.appliance):
             result = True
-            print("Matching level 1 event found in lvl 2 pattern!")
+            #print("Matching level 1 event found in lvl 2 pattern!")
             break
     return result
 

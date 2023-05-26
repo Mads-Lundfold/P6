@@ -48,14 +48,15 @@ class EventFactory:
         events_on_day = list()
         for event in self.events:
             if event.occured.strftime('%m-%d') == month_day:
-                events_on_day.append(event)
+                if event.length < 96: # This check is for removing events longer than a day for bugfixing
+                    events_on_day.append(event)
         
         return events_on_day
         
 
     def print_events_info(self):
         for event in self.events:
-            print(event.occured, event.timeslot)
+            print(event.appliance, event.profile, event.total_consumption)
 
 
 # TODO: Make timeslot granularity dynamic instead of 15 minutes
@@ -68,6 +69,7 @@ class Event:
         self.length = len(profile)
         self.endslot = self.timeslot + self.length
         self.placed = False
+        self.total_consumption = sum(profile)
 
 
 def testspace():

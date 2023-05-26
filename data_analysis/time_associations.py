@@ -4,6 +4,7 @@ import sys
 import datetime
 
 from data_analysis import get_data_from_house
+from appliance_removal import remove_appliances
 
 
 #TODO Improve paths to house data, so it doesn't have to be called from this file.
@@ -31,7 +32,7 @@ def usage_frequencies(df: pd.DataFrame):
     df.index = pd.to_datetime(df.index, unit='s').time
 
     # Remove all rows corresponding to "laptop"
-    df = df.drop(columns='aggregate')
+    #df = df.drop(columns='aggregate')
 
     # Groupby time index to get frequencies
     frequencies = df.groupby(df.index).sum()
@@ -108,6 +109,7 @@ def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
     index = pd.Index(range(0,len(relative_usage),1))
     relative_usage = relative_usage.set_index(index)
     print(relative_usage)
+    #relative_usage.to_csv('dataframes/freq.csv')
 
     available_times = {}
     for appliance in relative_usage.columns:
@@ -122,10 +124,14 @@ def get_quarter_associations(frequencies: pd.DataFrame, threshold: float):
 
 # Running it
 def get_quarter_tas():
-    watt_df, on_off_df = get_data_from_house(house_number = house_3) 
+    on_off_df = pd.read_csv('./dataframes/house_1_2014_15min_on_off.csv').set_index('Time')
+    on_off_df = remove_appliances(on_off_df)
+    #print(on_off_df)
     frequencies = usage_frequencies(on_off_df)
-    return get_quarter_associations(frequencies, 30)
+    
+    #plot_frequencies(frequencies)
+    return get_quarter_associations(frequencies, 10)
     #time_associations_start_finish, unusable_time_intervals_all_appliances = get_time_associations(frequencies, './dataframes/house_3_events.csv', 30)
     #return unusable_time_intervals_all_appliances
 
-#get_restricted_times()
+#get_quarter_tas()
