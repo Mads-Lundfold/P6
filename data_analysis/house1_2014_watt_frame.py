@@ -36,8 +36,11 @@ def generate_2014_h1_thin()-> None:
     print(watt_df)
     print(on_off_df)
     watt_df = remove_appliances(watt_df)
-    write_dataframe_to_csv_headers(watt_df, 'house_1_2014_15min_watts')
-    write_dataframe_to_csv_headers(on_off_df, 'house_1_2014_15min_on_off')
+    print(watt_df)
+    on_off_df = remove_appliances(on_off_df)
+    print(on_off_df)
+    #write_dataframe_to_csv_headers(watt_df, 'house_1_2014_15min_watts')
+    write_dataframe_to_csv_headers(on_off_df, 'house_1_2014_15min_on_off_NEW')
 
     return
 
